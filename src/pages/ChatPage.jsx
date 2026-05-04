@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Send, MoreVertical, Smile, Paperclip, MessageSquare } from 'lucide-react';
+import { Search, Send, MoreVertical, Smile, Paperclip, MessageSquare, Plus, X, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -24,12 +24,118 @@ export default function ChatPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [globalUsers, setGlobalUsers] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const bottomRef = useRef(null);
   const creatingConv = useRef(false);
   const optionsRef = useRef(null);
   const emojiPickerRef = useRef(null);
+  const activeConvRef = useRef(null);
+
+  // Global user search for new conversations
+  useEffect(() => {
+    if (!showNewChatModal || !user) return;
+    
+    const searchUsers = async () => {
+      setSearchingUsers(true);
+      
+      let query = supabase.from('profiles').select('id, name, avatar, department').neq('id', user.id).limit(10);
+      
+      if (globalSearch.trim()) {
+        query = query.ilike('name', `%${globalSearch.trim()}%`);
+      }
+      
+      const { data, error } = await query;
+      if (!error && data) {
+        setGlobalUsers(data);
+      }
+      setSearchingUsers(false);
+    };
+    
+    // Debounce
+    const timeoutId = setTimeout(() => {
+      searchUsers();
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [showNewChatModal, globalSearch, user]);
 
   // Close options dropdown on click outside
+  useEffect(() => {
+    activeConvRef.current = activeConv;
+  }, [activeConv]);
+
+  const refreshConversations = useCallback(async () => {
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('conversation_participants')
+      .select(`
+        unread_count,
+        conversations (
+          id,
+          is_group,
+          name,
+          last_message,
+          updated_at,
+          conversation_participants (
+            profiles (
+              id,
+              name,
+              avatar
+            )
+          )
+        )
+      `)
+      .eq('profile_id', user.id);
+
+    if (error) throw error;
+
+    const formatted = (data || []).map((cp) => {
+      const c = cp.conversations;
+      let displayName = c.name;
+      let otherUser = null;
+      let participants = [];
+
+      if (!c.is_group) {
+        const others = c.conversation_participants.filter((p) => p.profiles?.id !== user.id);
+        if (others.length > 0) {
+          otherUser = others[0].profiles;
+          displayName = otherUser?.name;
+        }
+      } else {
+        participants = c.conversation_participants.map((p) => ({id: p.profiles?.id, name: p.profiles?.name})).filter(p => p.name);
+      }
+
+      return {
+        id: c.id,
+        name: displayName || 'Unknown',
+        lastMessage: c.last_message,
+        time: new Date(c.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date(c.updated_at).getTime(),
+        unread: cp.unread_count,
+        online: true,
+        otherUserId: otherUser?.id,
+        isGroup: c.is_group,
+        participants,
+      };
+    }).sort((a, b) => b.timestamp - a.timestamp);
+
+    setConversations(formatted);
+
+    const currentActive = activeConvRef.current;
+    if (currentActive?.id) {
+      const updatedActive = formatted.find((conv) => conv.id === currentActive.id);
+      if (updatedActive) {
+        setActiveConv(updatedActive);
+      }
+    }
+
+    return formatted;
+  }, [user]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (optionsRef.current && !optionsRef.current.contains(event.target)) {
@@ -96,6 +202,17 @@ export default function ChatPage() {
     setActiveConv(conv);
     setMessages([]); // clear old while loading
 
+    if (conv.unread > 0) {
+      await supabase
+        .from('conversation_participants')
+        .update({ unread_count: 0 })
+        .eq('conversation_id', conv.id)
+        .eq('profile_id', user.id);
+        
+      setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unread: 0 } : c));
+      conv.unread = 0;
+    }
+
     const { data, error } = await supabase
       .from('messages')
       .select(`
@@ -119,178 +236,246 @@ export default function ChatPage() {
     }
   };
 
-  // Fetch Conversations
+  const startNewChat = async (userId) => {
+    // Check if conversation already exists
+    const existingConv = conversations.find((c) => c.otherUserId === userId);
+    if (existingConv) {
+      selectConv(existingConv);
+      return;
+    }
+
+    const { data: convData, error: convError } = await supabase
+      .from('conversations')
+      .insert([{ is_group: false, created_by: user.id }])
+      .select()
+      .single();
+
+    if (convData && !convError) {
+      const { error: partError } = await supabase
+        .from('conversation_participants')
+        .insert([
+          { conversation_id: convData.id, profile_id: user.id },
+          { conversation_id: convData.id, profile_id: userId },
+        ]);
+
+      if (partError) {
+        console.error("Error inserting participants:", partError);
+        showToast("Failed to add participants: " + partError.message, { type: 'error' });
+      }
+
+      const { data: otherProfile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      const newConv = {
+        id: convData.id,
+        name: otherProfile?.name || 'Unknown',
+        lastMessage: null,
+        time: 'Just now',
+        timestamp: Date.now(),
+        unread: 0,
+        online: true,
+        otherUserId: userId,
+        isGroup: false,
+        participants: [{id: userId, name: otherProfile?.name}]
+      };
+
+      setConversations((prev) => [newConv, ...prev]);
+      selectConv(newConv);
+    } else {
+      console.error("Error creating conversation:", convError);
+      showToast("Failed to create conversation: " + convError?.message, { type: 'error' });
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
+    let isMounted = true;
+
     const fetchConversations = async () => {
       try {
-        const { data, error } = await supabase
-          .from('conversation_participants')
-          .select(`
-            unread_count,
-            conversations (
-              id,
-              is_group,
-              name,
-              last_message,
-              updated_at,
-              conversation_participants (
-                profiles (
-                  id,
-                  name,
-                  avatar
-                )
-              )
-            )
-          `)
-          .eq('profile_id', user.id);
+        if (!isMounted) return;
 
-        if (error) throw error;
+        const formatted = await refreshConversations();
 
-        if (data) {
-          const formatted = data.map(cp => {
-            const c = cp.conversations;
-            let displayName = c.name;
-            let otherUser = null;
-            let participants = [];
-            
-            if (!c.is_group) {
-              const others = c.conversation_participants.filter(p => p.profiles?.id !== user.id);
-              if (others.length > 0) {
-                otherUser = others[0].profiles;
-                displayName = otherUser?.name;
+        if (!isMounted) return;
+
+        if (startChatWithId) {
+          let existingConv = formatted.find((c) => c.otherUserId === startChatWithId);
+          if (existingConv) {
+            selectConv(existingConv);
+            navigate('.', { replace: true, state: {} });
+          } else if (!creatingConv.current) {
+            creatingConv.current = true;
+
+            const { data: convData, error: convError } = await supabase
+              .from('conversations')
+              .insert([{ is_group: false, created_by: user.id }])
+              .select()
+              .single();
+
+            if (convData && !convError) {
+              const { error: partError } = await supabase
+                .from('conversation_participants')
+                .insert([
+                  { conversation_id: convData.id, profile_id: user.id },
+                  { conversation_id: convData.id, profile_id: startChatWithId },
+                ]);
+
+              if (partError) {
+                console.error("Error inserting participants:", partError);
+                showToast("Failed to add participants: " + partError.message, { type: 'error' });
               }
-            } else {
-              participants = c.conversation_participants.map(p => p.profiles?.name).filter(Boolean);
-            }
 
-            return {
-              id: c.id,
-              name: displayName || 'Unknown',
-              lastMessage: c.last_message,
-              time: new Date(c.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              timestamp: new Date(c.updated_at).getTime(),
-              unread: cp.unread_count,
-              online: true, 
-              otherUserId: otherUser?.id,
-              isGroup: c.is_group,
-              participants
-            };
-          }).sort((a, b) => b.timestamp - a.timestamp); // Sort by newest
-
-          setConversations(formatted);
-          
-          // Handle incoming 'Connect' requests from DeveloperPage
-          if (startChatWithId) {
-            let existingConv = formatted.find(c => c.otherUserId === startChatWithId);
-            if (existingConv) {
-              selectConv(existingConv);
-              navigate('.', { replace: true, state: {} });
-            } else if (!creatingConv.current) {
-              creatingConv.current = true;
-              
-              // Create a brand new conversation
-              const { data: convData, error: convError } = await supabase
-                .from('conversations')
-                .insert([{ is_group: false }])
-                .select()
+              const { data: otherProfile } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', startChatWithId)
                 .single();
 
-              if (convData && !convError) {
-                await supabase
-                  .from('conversation_participants')
-                  .insert([
-                    { conversation_id: convData.id, profile_id: user.id },
-                    { conversation_id: convData.id, profile_id: startChatWithId }
-                  ]);
+              const newConv = {
+                id: convData.id,
+                name: otherProfile?.name || 'Unknown',
+                lastMessage: null,
+                time: 'Just now',
+                timestamp: Date.now(),
+                unread: 0,
+                online: true,
+                otherUserId: startChatWithId,
+                isGroup: false,
+                participants: [{id: startChatWithId, name: otherProfile?.name}]
+              };
 
-                const { data: otherProfile } = await supabase
-                  .from('profiles')
-                  .select('name')
-                  .eq('id', startChatWithId)
-                  .single();
-
-                const newConv = {
-                  id: convData.id,
-                  name: otherProfile?.name || 'Unknown',
-                  lastMessage: null,
-                  time: 'Just now',
-                  timestamp: Date.now(),
-                  unread: 0,
-                  online: true,
-                  otherUserId: startChatWithId,
-                  isGroup: false
-                };
-
-                setConversations(prev => [newConv, ...prev]);
-                selectConv(newConv);
-                navigate('.', { replace: true, state: {} });
-              }
-              // Reset the guard in case creation failed so it can be retried
-              creatingConv.current = false;
-            }
-          } else if (startConversationId) {
-            const existingConv = formatted.find((conv) => conv.id === startConversationId);
-            if (existingConv) {
-              selectConv(existingConv);
+              setConversations((prev) => [newConv, ...prev]);
+              selectConv(newConv);
               navigate('.', { replace: true, state: {} });
             } else {
-              const { data: convData, error: convError } = await supabase
-                .from('conversations')
-                .select(
-                  `
-                    id,
-                    is_group,
-                    name,
-                    last_message,
-                    updated_at,
-                    conversation_participants (
-                      profiles (
-                        id,
-                        name,
-                        avatar
-                      )
-                    )
-                  `
-                )
-                .eq('id', startConversationId)
-                .maybeSingle();
-
-              if (!convError && convData) {
-                const otherUser = convData.conversation_participants?.find((participant) => participant.profiles?.id !== user.id)?.profiles;
-                const participants = convData.is_group ? convData.conversation_participants?.map(p => p.profiles?.name).filter(Boolean) : [];
-                const newConv = {
-                  id: convData.id,
-                  name: convData.name || otherUser?.name || 'Unknown',
-                  lastMessage: convData.last_message,
-                  time: new Date(convData.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                  timestamp: new Date(convData.updated_at).getTime(),
-                  unread: 0,
-                  online: true,
-                  otherUserId: otherUser?.id,
-                  isGroup: convData.is_group,
-                  participants
-                };
-
-                setConversations((prev) => [newConv, ...prev.filter((conv) => conv.id !== newConv.id)]);
-                selectConv(newConv);
-                navigate('.', { replace: true, state: {} });
-              }
+              console.error("Error creating conversation:", convError);
+              showToast("Failed to create conversation: " + convError?.message, { type: 'error' });
             }
-          } else if (formatted.length > 0 && !activeConv) {
-            selectConv(formatted[0]);
+
+            creatingConv.current = false;
           }
+        } else if (startConversationId) {
+          const existingConv = formatted.find((conv) => conv.id === startConversationId);
+          if (existingConv) {
+            selectConv(existingConv);
+            navigate('.', { replace: true, state: {} });
+          } else {
+            const { data: convData, error: convError } = await supabase
+              .from('conversations')
+              .select(
+                `
+                  id,
+                  is_group,
+                  name,
+                  last_message,
+                  updated_at,
+                  conversation_participants (
+                    profiles (
+                      id,
+                      name,
+                      avatar
+                    )
+                  )
+                `
+              )
+              .eq('id', startConversationId)
+              .maybeSingle();
+
+            if (!convError && convData) {
+              const otherUser = convData.conversation_participants?.find((participant) => participant.profiles?.id !== user.id)?.profiles;
+              const participants = convData.is_group ? convData.conversation_participants?.map((p) => ({id: p.profiles?.id, name: p.profiles?.name})).filter(p => p.name) : [];
+              const newConv = {
+                id: convData.id,
+                name: convData.name || otherUser?.name || 'Unknown',
+                lastMessage: convData.last_message,
+                time: new Date(convData.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: new Date(convData.updated_at).getTime(),
+                unread: 0,
+                online: true,
+                otherUserId: otherUser?.id,
+                isGroup: convData.is_group,
+                participants,
+              };
+
+              setConversations((prev) => [newConv, ...prev.filter((conv) => conv.id !== newConv.id)]);
+              selectConv(newConv);
+              navigate('.', { replace: true, state: {} });
+            }
+          }
+        } else if (formatted.length > 0 && !activeConvRef.current) {
+          selectConv(formatted[0]);
         }
       } catch (err) {
         console.error('Error fetching conversations:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchConversations();
-  }, [user, startChatWithId, startConversationId, navigate]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, startChatWithId, startConversationId, navigate, refreshConversations]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const conversationsChannel = supabase
+      .channel(`chat_conversations_${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conversations',
+      }, (payload) => {
+        const updated = payload.new;
+        setConversations((prev) => prev.map((conv) => (
+          conv.id === updated.id
+            ? {
+                ...conv,
+                name: updated.name ?? conv.name,
+                lastMessage: updated.last_message ?? conv.lastMessage,
+                timestamp: updated.updated_at ? new Date(updated.updated_at).getTime() : conv.timestamp,
+                time: updated.updated_at ? new Date(updated.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : conv.time,
+              }
+            : conv
+        )).sort((a, b) => b.timestamp - a.timestamp));
+
+        if (activeConvRef.current?.id === updated.id) {
+          setActiveConv((prev) => prev ? {
+            ...prev,
+            name: updated.name ?? prev.name,
+            lastMessage: updated.last_message ?? prev.lastMessage,
+            timestamp: updated.updated_at ? new Date(updated.updated_at).getTime() : prev.timestamp,
+            time: updated.updated_at ? new Date(updated.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : prev.time,
+          } : prev);
+        }
+      })
+      .subscribe();
+
+    const participantChannel = supabase
+      .channel(`chat_participants_${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'conversation_participants',
+        filter: `profile_id=eq.${user.id}`,
+      }, async () => {
+        await refreshConversations();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(conversationsChannel);
+      supabase.removeChannel(participantChannel);
+    };
+  }, [user, refreshConversations]);
 
   // Real-time listener for active conversation
   useEffect(() => {
@@ -305,14 +490,17 @@ export default function ChatPage() {
         filter: `conversation_id=eq.${activeConv.id}`
       }, (payload) => {
         const m = payload.new;
-        if (m.sender_id !== user.id) {
-          setMessages(prev => [...prev, {
+        setMessages((prev) => {
+          if (prev.some((message) => message.id === m.id)) return prev;
+
+          return [...prev, {
             id: m.id,
-            from: 'them',
+            from: m.sender_id === user.id ? 'me' : 'them',
             text: m.content,
-            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }]);
-        }
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            senderName: m.sender_id === user.id ? user.name : (activeConv.isGroup ? activeConv.participants?.find(p => p.id === m.sender_id)?.name || 'Member' : undefined),
+          }];
+        });
       })
       .subscribe();
 
@@ -326,20 +514,29 @@ export default function ChatPage() {
     
     const text = input.trim();
     setInput('');
-    
-    // Optimistic UI update
-    const newMsg = { id: Date.now(), from: 'me', text, time: 'Just now' };
-    setMessages(prev => [...prev, newMsg]);
 
-    const { error } = await supabase
+    const { data: insertedMessage, error } = await supabase
       .from('messages')
       .insert([{
         conversation_id: activeConv.id,
         sender_id: user.id,
         content: text
-      }]);
+      }])
+      .select('id, content, created_at, sender_id')
+      .single();
 
-    if (!error) {
+    if (!error && insertedMessage) {
+      setMessages((prev) => {
+        if (prev.some((message) => message.id === insertedMessage.id)) return prev;
+        return [...prev, {
+          id: insertedMessage.id,
+          from: 'me',
+          text: insertedMessage.content,
+          time: new Date(insertedMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          senderName: user.name,
+        }];
+      });
+
       // Update conversation's last message time
       await supabase
         .from('conversations')
@@ -352,6 +549,9 @@ export default function ChatPage() {
           ? { ...c, lastMessage: text, time: 'Just now', timestamp: Date.now() } 
           : c
       ).sort((a, b) => b.timestamp - a.timestamp));
+    } else {
+      setInput(text);
+      showToast('Failed to send message.', { type: 'error' });
     }
   };
 
@@ -374,11 +574,21 @@ export default function ChatPage() {
         {/* Sidebar */}
         <div className="w-80 border-r border-slate-200 flex flex-col flex-shrink-0">
           <div className="p-4 border-b border-slate-200">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-sm font-bold text-slate-800 flex-1">Conversations</h2>
+              <button 
+                onClick={() => setShowNewChatModal(true)}
+                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                title="New Conversation"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                className="input-field pl-9 text-sm"
+                className="input-field pl-9 text-sm bg-slate-50"
                 placeholder="Search conversations..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -452,7 +662,7 @@ export default function ChatPage() {
                     <p className="font-semibold text-slate-900">{activeConv.name}</p>
                     <p className="text-xs text-slate-500">
                       {activeConv.isGroup && activeConv.participants 
-                        ? activeConv.participants.join(', ') 
+                        ? activeConv.participants.map(p => p.name).join(', ') 
                         : (activeConv.online ? 'Online' : 'Offline')}
                     </p>
                   </div>
@@ -627,6 +837,67 @@ export default function ChatPage() {
                   Save
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Chat Modal */}
+      {showNewChatModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">New Conversation</h3>
+              <button 
+                onClick={() => setShowNewChatModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 border-b border-slate-100">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  className="input-field pl-9 text-sm"
+                  placeholder="Search students by name..."
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {searchingUsers ? (
+                <div className="flex justify-center p-8 text-cyan-600">
+                  <Loader2 className="animate-spin" size={24} />
+                </div>
+              ) : globalUsers.length === 0 ? (
+                <div className="text-center p-8 text-sm text-slate-500">
+                  No users found.
+                </div>
+              ) : (
+                globalUsers.map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => {
+                      setShowNewChatModal(false);
+                      setGlobalSearch('');
+                      startNewChat(u.id);
+                    }}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center text-xs font-semibold shrink-0">
+                      {getInitials(u.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-slate-900 truncate">{u.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{u.department || 'Student'}</p>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>

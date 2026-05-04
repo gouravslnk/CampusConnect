@@ -56,13 +56,23 @@ export default function RegisterPage() {
       const { data, error: authError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
+        options: {
+          data: {
+            name: form.name,
+            department: form.department,
+            year: form.year,
+            enrollment_no: form.enrollment_no,
+            batch: form.batch,
+            role: form.role,
+          },
+        },
       });
 
       if (authError) throw authError;
 
       if (data.user) {
-        // 2. Create profile — always starts as 'student' role until approved
-        const { error: profileError } = await supabase.from('profiles').insert([{
+        // 2. Create or update profile — always starts as 'student' role until approved
+        const { error: profileError } = await supabase.from('profiles').upsert([{
           id: data.user.id,
           name: form.name,
           email: form.email.trim(),
@@ -70,8 +80,7 @@ export default function RegisterPage() {
           department: form.department,
           year: form.year,
           enrollment_no: form.enrollment_no,
-          batch: form.batch,
-        }]);
+        }], { onConflict: 'id' });
 
         if (profileError) throw profileError;
 

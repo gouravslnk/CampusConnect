@@ -122,6 +122,7 @@ export default function AITeamRecommender({
         name: teamName,
         is_group: true,
         last_message: firstMessage,
+        created_by: user.id,
       }])
       .select()
       .single();

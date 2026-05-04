@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Bell, MessageSquare, User, LogOut, ChevronDown, Check } from 'lucide-react';
+import { Menu, X, Bell, MessageSquare, User, LogOut, ChevronDown, Check, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 
@@ -19,6 +19,7 @@ export default function Navbar({ user, onLogout }) {
   const [dropOpen, setDropOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const notifRef = useRef(null);
   
   const location = useLocation();
@@ -213,8 +214,27 @@ export default function Navbar({ user, onLogout }) {
     setNotifications(notifications.map(n => ({ ...n, is_read: true })));
   };
 
+  const clearAllNotifications = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from('notifications').delete().eq('profile_id', user.id);
+      if (error) throw error;
+      
+      setNotifications(prev => prev.filter(n => String(n.id).startsWith('connection_request_')));
+      showToast("Notifications cleared", { type: 'success' });
+      setShowClearConfirm(false);
+      setNotifOpen(false);
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to clear notifications", { type: 'error' });
+      setShowClearConfirm(false);
+    }
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <>
+      <nav className="sticky top-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -268,11 +288,16 @@ export default function Navbar({ user, onLogout }) {
                     <div className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                       <div className="flex items-center justify-between px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <span className="font-bold text-sm text-slate-900 dark:text-white">Notifications</span>
-                        {unreadCount > 0 && (
-                          <button onClick={markAllAsRead} className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
-                            <Check size={12} /> Mark all read
+                        <div className="flex items-center gap-3">
+                          {unreadCount > 0 && (
+                            <button onClick={markAllAsRead} className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1">
+                              <Check size={12} /> Mark read
+                            </button>
+                          )}
+                          <button onClick={() => setShowClearConfirm(true)} className="text-xs text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 flex items-center gap-1">
+                            <Trash2 size={12} /> Clear all
                           </button>
-                        )}
+                        </div>
                       </div>
                       <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 ? (
@@ -456,5 +481,34 @@ export default function Navbar({ user, onLogout }) {
         )}
       </div>
     </nav>
+
+      {/* Clear Notifications Confirm Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Clear Notifications</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                Are you sure you want to clear all your notifications? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors font-medium text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={clearAllNotifications}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors font-medium text-sm shadow-sm"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
