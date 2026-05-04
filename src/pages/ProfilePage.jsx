@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Github, Linkedin, Edit3, Plus, Trash2, Code2, Briefcase, Mail, X, Upload, Loader } from 'lucide-react';
+import { Github, Linkedin, Edit3, Plus, Trash2, Code2, Briefcase, Mail, X, Upload, Loader, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { uploadFile, deleteFile } from '../lib/uploadService';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -25,6 +27,8 @@ export default function ProfilePage() {
   const [savingProject, setSavingProject] = useState(false);
   
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -160,6 +164,22 @@ export default function ProfilePage() {
 
     setUploadingAvatar(false);
     e.target.value = ''; // Reset input
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    // Call the postgres function to delete the user auth record
+    const { error } = await supabase.rpc('delete_user');
+    
+    if (error) {
+      showToast('Failed to delete account. Please try again.', { type: 'error' });
+      setIsDeletingAccount(false);
+    } else {
+      // Sign out and redirect
+      await supabase.auth.signOut();
+      showToast('Account deleted successfully.', { type: 'success' });
+      navigate('/');
+    }
   };
 
   if (loading) {
@@ -389,6 +409,23 @@ export default function ProfilePage() {
                    <button type="button" onClick={() => setShowSettingsModal(false)} className="btn-secondary flex-1 py-2.5">Cancel</button>
                    <button type="submit" disabled={savingSettings} className="btn-primary flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-200">{savingSettings ? 'Saving...' : 'Save Changes'}</button>
                  </div>
+                 
+                 <div className="pt-6 mt-4 border-t border-red-100">
+                    <h4 className="text-sm font-bold text-red-600 mb-2">Danger Zone</h4>
+                    <p className="text-xs text-gray-500 mb-3">Permanently delete your account and all associated data.</p>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setShowSettingsModal(false);
+                        setShowDeleteModal(true);
+                      }}
+                      disabled={isDeletingAccount}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold transition-colors disabled:opacity-50"
+                    >
+                      {isDeletingAccount ? <Loader size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                      {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+                    </button>
+                 </div>
               </form>
            </div>
         </div>
@@ -421,6 +458,26 @@ export default function ProfilePage() {
                    <button type="submit" disabled={savingProject} className="btn-primary flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-200">{savingProject ? 'Adding...' : 'Add Project'}</button>
                  </div>
               </form>
+           </div>
+        </div>
+      )}
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="p-6 text-center">
+                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-red-600">
+                    <AlertTriangle size={24} />
+                 </div>
+                 <h3 className="font-bold text-xl text-gray-900 mb-2">Delete Account</h3>
+                 <p className="text-sm text-gray-500 mb-6">Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.</p>
+                 <div className="flex gap-3">
+                   <button type="button" onClick={() => setShowDeleteModal(false)} disabled={isDeletingAccount} className="btn-secondary flex-1 py-2.5">Cancel</button>
+                   <button type="button" onClick={handleDeleteAccount} disabled={isDeletingAccount} className="btn-primary flex-1 py-2.5 bg-red-600 hover:bg-red-700 shadow-sm shadow-red-200">
+                     {isDeletingAccount ? <Loader size={16} className="animate-spin mx-auto" /> : 'Yes, Delete'}
+                   </button>
+                 </div>
+              </div>
            </div>
         </div>
       )}

@@ -40,3 +40,17 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ==========================================
+-- 3. USER MANAGEMENT FUNCTIONS
+-- ==========================================
+
+-- Function to delete user account securely
+CREATE OR REPLACE FUNCTION public.delete_user()
+RETURNS void AS $$
+BEGIN
+  -- Delete the user from auth.users. 
+  -- Assuming cascade deletes on foreign keys, this will clean up their profile.
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

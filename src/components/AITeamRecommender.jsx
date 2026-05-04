@@ -176,7 +176,7 @@ export default function AITeamRecommender({
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-700">
-            <BrainCircuit size={14} /> AI Team Match
+            <BrainCircuit size={14} /> Team Builder
           </div>
           <h3 className="mt-3 text-lg font-bold text-slate-900">Recommended teammates</h3>
           <p className="mt-1 text-sm leading-6 text-slate-500">

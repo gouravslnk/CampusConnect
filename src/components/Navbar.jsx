@@ -8,7 +8,7 @@ const navLinks = [
   { to: '/events', label: 'Events' },
   { to: '/developers', label: 'Developers' },
   { to: '/connections', label: 'Connections' },
-  { to: '/ai-teams', label: 'AI Teams' },
+  { to: '/ai-teams', label: 'Team Builder' },
   { to: '/chat', label: 'Messages' },
   { to: '/admin', label: 'System Admin', requiresSystemAdmin: true },
 ];

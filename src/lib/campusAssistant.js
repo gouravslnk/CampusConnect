@@ -142,7 +142,7 @@ function answerTeammates(students, user, events, question) {
   return `${intro}\n\n${bulletList(matches.map((student) => {
     const skills = student.matchedSkills.length ? student.matchedSkills.join(', ') : (student.skills || []).slice(0, 3).join(', ');
     return `${student.name} - ${student.score}% fit, skills: ${skills || 'profile skills not listed'}`;
-  }))}\n\nYou can open AI Teams to create a group chat with the selected people.`;
+  }))}\n\nYou can open Team Builder to create a group chat with the selected people.`;
 }
 
 function answerIdeas(events, user, question) {
