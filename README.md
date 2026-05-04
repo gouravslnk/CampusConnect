@@ -11,14 +11,14 @@ CampusConnect is a comprehensive platform built to streamline university life by
 - **AI-Powered Team Builder**: Smart team recommendations and matchmaking using integrated AI to help you find the perfect partners for hackathons and projects.
 - **Responsive Design**: A sleek, modern, and fully responsive UI built with Tailwind CSS, supporting dark/light mode themes.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend**: React (v18), Vite, React Router
 - **Styling**: Tailwind CSS, PostCSS, Lucide Icons
 - **Backend/Database**: [Supabase](https://supabase.com/) (PostgreSQL, Realtime Subscriptions, Row Level Security)
 - **Deployment**: Ready for Vercel, Netlify, or any static hosting service.
 
-## ⚙️ Local Development Setup
+## Local Development Setup
 
 Follow these steps to run the project locally:
 
@@ -48,13 +48,13 @@ Follow these steps to run the project locally:
 5. **Open your browser**:
    Navigate to `http://localhost:5173` to view the application.
 
-## 🗄️ Database Setup (Supabase)
+## Database Setup (Supabase)
 
 If you are setting up a fresh Supabase project, you can use the SQL scripts provided in the `sql/` directory to create the required tables, triggers, and Row Level Security (RLS) policies.
 
 - `sql/supabase_schema.sql` - Core schema setup
 - `sql/add_missing_rls_policies.sql` - Security policies
 
-## 📝 License
+## License
 
 This project is open-source and available under the [MIT License](LICENSE).
