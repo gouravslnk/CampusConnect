@@ -77,32 +77,55 @@ export default function DashboardPage() {
         });
       }
     } else {
-      const { data, error } = await supabase
+      const { data: regs, error: regError } = await supabase
         .from('event_registrations')
-        .select('registered_at, events(*, event_registrations(count))')
+        .select('event_id, registered_at')
         .eq('profile_id', user.id);
         
-      if (!error && data) {
-        fetchedEvents = data.map(r => r.events).filter(Boolean);
+      if (!regError && regs && regs.length > 0) {
+        const eventIds = regs.map(r => r.event_id);
         
-        const totalAttended = fetchedEvents.length;
-        const upcoming = fetchedEvents.filter(e => new Date(e.date) >= new Date(new Date().setHours(0,0,0,0))).length;
+        const { data: eventsData, error: eventsError } = await supabase
+          .from('events')
+          .select('*, event_registrations(count)')
+          .in('id', eventIds);
+          
+        if (!eventsError && eventsData) {
+          // Map events to registration dates
+          const eventsWithRegDate = eventsData.map(e => {
+             const reg = regs.find(r => r.event_id === e.id);
+             return { ...e, registered_at: reg?.registered_at };
+          });
+          
+          fetchedEvents = eventsWithRegDate;
+          
+          const totalAttended = fetchedEvents.length;
+          const upcoming = fetchedEvents.filter(e => new Date(e.date) >= new Date(new Date().setHours(0,0,0,0))).length;
 
+          const { data: profile } = await supabase.from('profiles').select('hackathons_won, projects(count)').eq('id', user.id).single();
+
+          calcStats = [
+            { label: 'Events Registered', value: totalAttended, change: 'All time', icon: <Calendar size={22} />, color: 'bg-blue-100 text-blue-700' },
+            { label: 'Upcoming Events', value: upcoming, change: 'Planned', icon: <Users size={22} />, color: 'bg-purple-100 text-purple-700' },
+            { label: 'Hackathons Won', value: profile?.hackathons_won || 0, change: 'From profile', icon: <Eye size={22} />, color: 'bg-green-100 text-green-700' },
+            { label: 'Projects Built', value: profile?.projects?.[0]?.count || 0, change: 'From profile', icon: <TrendingUp size={22} />, color: 'bg-orange-100 text-orange-700' },
+          ];
+
+          fetchedEvents.forEach(e => {
+            const m = new Date(e.registered_at).toLocaleString('default', { month: 'short' });
+            if (chartCounts[m] !== undefined) chartCounts[m] += 1;
+            if (catCounts[e.category] !== undefined) catCounts[e.category] += 1;
+          });
+        }
+      } else {
+        // No registrations or error
         const { data: profile } = await supabase.from('profiles').select('hackathons_won, projects(count)').eq('id', user.id).single();
-
         calcStats = [
-          { label: 'Events Registered', value: totalAttended, change: 'All time', icon: <Calendar size={22} />, color: 'bg-blue-100 text-blue-700' },
-          { label: 'Upcoming Events', value: upcoming, change: 'Planned', icon: <Users size={22} />, color: 'bg-purple-100 text-purple-700' },
+          { label: 'Events Registered', value: 0, change: 'All time', icon: <Calendar size={22} />, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Upcoming Events', value: 0, change: 'Planned', icon: <Users size={22} />, color: 'bg-purple-100 text-purple-700' },
           { label: 'Hackathons Won', value: profile?.hackathons_won || 0, change: 'From profile', icon: <Eye size={22} />, color: 'bg-green-100 text-green-700' },
           { label: 'Projects Built', value: profile?.projects?.[0]?.count || 0, change: 'From profile', icon: <TrendingUp size={22} />, color: 'bg-orange-100 text-orange-700' },
         ];
-
-        data.forEach(r => {
-          if (!r.events) return;
-          const m = new Date(r.registered_at).toLocaleString('default', { month: 'short' });
-          if (chartCounts[m] !== undefined) chartCounts[m] += 1;
-          if (catCounts[r.events.category] !== undefined) catCounts[r.events.category] += 1;
-        });
       }
     }
 
