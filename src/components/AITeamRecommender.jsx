@@ -227,7 +227,7 @@ export default function AITeamRecommender({
           <p className="mt-1 text-sm text-slate-400">Ask students to update their skills and set their status to available.</p>
         </div>
       ) : (
-        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+        <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '450px' }}>
           {recommendations.map((student) => {
             const selected = selectedIds.includes(student.id);
             return (
