@@ -27,6 +27,20 @@ DROP POLICY IF EXISTS "Users can delete own projects" ON public.projects;
 CREATE POLICY "Users can delete own projects" ON public.projects FOR DELETE USING (auth.uid() = profile_id);
 
 
+-- 2.5 PAST EVENTS
+DROP POLICY IF EXISTS "Public past events are viewable by everyone" ON public.past_events;
+CREATE POLICY "Public past events are viewable by everyone" ON public.past_events FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can create past events" ON public.past_events;
+CREATE POLICY "Users can create past events" ON public.past_events FOR INSERT WITH CHECK (auth.uid() = profile_id);
+
+DROP POLICY IF EXISTS "Users can update own past events" ON public.past_events;
+CREATE POLICY "Users can update own past events" ON public.past_events FOR UPDATE USING (auth.uid() = profile_id);
+
+DROP POLICY IF EXISTS "Users can delete own past events" ON public.past_events;
+CREATE POLICY "Users can delete own past events" ON public.past_events FOR DELETE USING (auth.uid() = profile_id);
+
+
 -- 3. EVENTS
 DROP POLICY IF EXISTS "Events are viewable by everyone" ON public.events;
 CREATE POLICY "Events are viewable by everyone" ON public.events FOR SELECT USING (true);

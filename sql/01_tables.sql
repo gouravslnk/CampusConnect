@@ -30,11 +30,25 @@ CREATE TABLE IF NOT EXISTS public.projects (
     title TEXT NOT NULL,
     description TEXT,
     tech TEXT,
+    link TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- ==========================================
--- 3. EVENTS & REGISTRATIONS
+-- 3. PAST EVENTS (MANUAL)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.past_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    role TEXT,
+    description TEXT,
+    date TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- ==========================================
+-- 4. EVENTS & REGISTRATIONS
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -81,7 +95,7 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_profile_id ON public.bookmarks(profile_
 CREATE INDEX IF NOT EXISTS idx_bookmarks_event_id ON public.bookmarks(event_id);
 
 -- ==========================================
--- 4. CHAT SYSTEM
+-- 5. CHAT SYSTEM
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.conversations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -128,7 +142,7 @@ BEGIN
 END $$;
 
 -- ==========================================
--- 5. NOTIFICATIONS & CONNECTIONS
+-- 6. NOTIFICATIONS & CONNECTIONS
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -155,7 +169,7 @@ CREATE INDEX IF NOT EXISTS idx_connection_requests_requester ON public.connectio
 CREATE INDEX IF NOT EXISTS idx_connection_requests_status ON public.connection_requests(status);
 
 -- ==========================================
--- 6. TEAMS (AI TEAM BUILDER)
+-- 7. TEAMS (AI TEAM BUILDER)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.teams (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -180,7 +194,7 @@ CREATE TABLE IF NOT EXISTS public.team_members (
 );
 
 -- ==========================================
--- 7. CLUBS
+-- 8. CLUBS
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.clubs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -217,6 +231,7 @@ CREATE TABLE IF NOT EXISTS public.club_logs (
 -- ==========================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.past_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
