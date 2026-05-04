@@ -79,7 +79,7 @@ export default function DashboardPage() {
     } else {
       const { data, error } = await supabase
         .from('event_registrations')
-        .select('created_at, events(*, event_registrations(count))')
+        .select('registered_at, events(*, event_registrations(count))')
         .eq('profile_id', user.id);
         
       if (!error && data) {
@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
         data.forEach(r => {
           if (!r.events) return;
-          const m = new Date(r.created_at).toLocaleString('default', { month: 'short' });
+          const m = new Date(r.registered_at).toLocaleString('default', { month: 'short' });
           if (chartCounts[m] !== undefined) chartCounts[m] += 1;
           if (catCounts[r.events.category] !== undefined) catCounts[r.events.category] += 1;
         });
