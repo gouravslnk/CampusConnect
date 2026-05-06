@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { initEmailJS, sendEventReminder } from '../lib/emailService';
+import { sendEventReminder } from '../lib/emailService';
 
 function buildEmptyMember(defaults = {}) {
   return {
@@ -192,21 +192,18 @@ export default function EventDetailPage() {
       setShowRegistrationModal(false);
       showToast('Successfully registered!', { type: 'success' });
 
-      initEmailJS();
-      setTimeout(async () => {
-        const emailSent = await sendEventReminder(
-          user.email,
-          user.name || 'Student',
-          event.title,
-          event.date,
-          event.time,
-          'confirmation'
-        );
+      const emailSent = await sendEventReminder(
+        user.email,
+        user.name || 'Student',
+        event.title,
+        event.date,
+        event.time,
+        'confirmation'
+      );
 
-        if (!emailSent) {
-          console.error('Failed to send confirmation email');
-        }
-      }, 200);
+      if (!emailSent) {
+        console.error('Failed to send confirmation email');
+      }
     } else {
       console.error(error);
       setRegistrationError(error.message || 'Error registering for event.');
