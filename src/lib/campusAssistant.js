@@ -38,65 +38,54 @@ const QUICK_PROMPTS = [
   'How should I prepare for upcoming events?',
 ];
 
-// Check if a question can be answered using local heuristics and DB data.
-// Returns true if the question matches campus-specific patterns we can handle locally.
-function canAnswerLocally(question) {
-  const q = normalize(question);
+// ============ Helper Functions ============
 
-  // Local keywords that we can confidently answer from DB and heuristics
-  const localKeywords = [
-    'event', 'events', 'upcoming', 'next', 'coming',
-    'team', 'teammate', 'teammates', 'partner', 'available',
-    'idea', 'ideas', 'project', 'projects', 'pitch',
-    'prepare', 'preparation', 'get ready',
-    'skill', 'skills', 'profile'
-  ];
-
-  const hasLocalKeyword = localKeywords.some((k) => q.includes(k));
-  return hasLocalKeyword && q.length < 150; // Avoid very long or unusual questions
+function normalize(text) {
+  return String(text || '').toLowerCase().trim();
 }
 
-// Call Gemini API only if question can't be answered locally.
+function getUpcomingEvents(events) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return events.filter((event) => {
+    if (event.status === 'closed' || event.status === 'cancelled') return false;
+    return new Date(event.date) >= today;
+  }).sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+function formatDate(dateStr, timeStr) {
+  if (!dateStr) return 'Date TBA';
+  
+  // Handle different date formats
+  let date;
+  if (dateStr.includes('-')) {
+    // ISO format (YYYY-MM-DD or YYYY-MM)
+    date = new Date(dateStr);
+  } else {
+    // User input like "Oct 2023"
+    date = new Date(dateStr);
+  }
+  
+  if (isNaN(date.getTime())) return dateStr || 'Date TBA';
+  
+  const options = { month: 'short', day: 'numeric', year: 'numeric' };
+  const formatted = date.toLocaleDateString('en-US', options);
+  return timeStr ? `${formatted} at ${timeStr}` : formatted;
+}
+
+function getEventByQuestion(events, question) {
+  const q = normalize(question);
+  return events.find((event) => q.includes(normalize(event.title))) || getUpcomingEvents(events)[0] || events[0];
+}
+
+// ============ Main Assistant Functions ============
 // Returns { text, usedLLM } where usedLLM indicates if Gemini was called.
 async function getHybridAnswer(question, context) {
   if (!question?.trim()) return { text: answerHelp(), usedLLM: false };
 
-  // Try local heuristic first (fast, no API cost)
-  if (canAnswerLocally(question)) {
-    const localAnswer = answerCampusQuestion(question, context);
-    return { text: localAnswer, usedLLM: false };
-  }
-
-  // Question can't be answered locally → try Gemini if available
-  try {
-    // Use relative endpoint path (works with Vercel auto-deployment)
-    // On local dev, this should be proxied by Vite config
-    const endpoint = '/api/assistant';
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, context: { eventCount: context.events?.length || 0 } }),
-    });
-
-    if (!response.ok) {
-      // If endpoint fails, fall back to local logic
-      if (response.status === 404 || response.status === 503) {
-        console.warn('[Campus AI] Endpoint not available, using local logic');
-        const localAnswer = answerCampusQuestion(question, context);
-        return { text: localAnswer, usedLLM: false };
-      }
-      throw new Error(`Server error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return { text: data.text || 'I could not generate a response.', usedLLM: true };
-  } catch (error) {
-    console.warn('[Campus AI] Gemini call failed, using local logic:', error);
-    // Fallback to local answer if API call fails
-    const localAnswer = answerCampusQuestion(question, context);
-    return { text: localAnswer, usedLLM: false };
-  }
+  // Always use local heuristic first - it's fast and reliable
+  const localAnswer = answerCampusQuestion(question, context);
+  return { text: localAnswer, usedLLM: false };
 }
 
 function userSkillSet(user) {

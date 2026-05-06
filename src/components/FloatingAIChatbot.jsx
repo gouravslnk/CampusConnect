@@ -92,11 +92,11 @@ export default function FloatingAIChatbot() {
     setThinking(true);
 
     try {
-      const { text: answer, usedLLM } = await answerQuestion(clean, { events, students, user });
-      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: answer, usedLLM }]);
+      const { text: answer } = await answerQuestion(clean, { events, students, user });
+      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: answer }]);
     } catch (error) {
       console.error('Error getting assistant response:', error);
-      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: 'Sorry, I encountered an error. Please try again.' }]);
+      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: 'I encountered an issue. Please try a different question about events, teammates, or how to prepare.' }]);
     } finally {
       setThinking(false);
     }
