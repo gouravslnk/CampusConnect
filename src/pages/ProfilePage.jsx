@@ -311,11 +311,11 @@ export default function ProfilePage() {
         {/* Left Column */}
         <div className="space-y-4">
           <div className="card p-6 text-center shadow-sm">
-            <div className="relative inline-block mb-3 group">
+            <div className="relative inline-block mb-3 group mx-auto">
               {profile.avatar ? (
-                <img src={profile.avatar} alt={profile.name} className="w-24 h-24 rounded-full mx-auto object-cover ring-4 ring-blue-50" />
+                <img src={profile.avatar} alt={profile.name} className="w-32 h-32 rounded-full mx-auto object-cover ring-4 ring-blue-100 shadow-lg" />
               ) : (
-                <div className="w-24 h-24 rounded-full mx-auto bg-blue-600 text-white flex items-center justify-center text-3xl font-bold ring-4 ring-blue-50">
+                <div className="w-32 h-32 rounded-full mx-auto bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-5xl font-bold ring-4 ring-blue-100 shadow-lg">
                   {profile.name?.charAt(0) || 'U'}
                 </div>
               )}

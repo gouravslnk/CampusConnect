@@ -57,10 +57,10 @@ export default function DeveloperCard({
           <img
             src={avatarUrl}
             alt={dev.name}
-            className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-100 flex-shrink-0"
+            className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-200 shadow-md flex-shrink-0"
           />
         ) : (
-          <div className="w-14 h-14 rounded-full bg-slate-900 text-white ring-2 ring-blue-100 flex-shrink-0 flex items-center justify-center font-semibold text-sm">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-900 to-blue-600 text-white ring-2 ring-blue-200 shadow-md flex-shrink-0 flex items-center justify-center font-bold text-lg">
             {initials}
           </div>
         )}

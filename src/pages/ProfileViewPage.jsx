@@ -226,9 +226,9 @@ export default function ProfileViewPage() {
         <div className="space-y-4">
           <div className="card p-6 text-center shadow-sm">
             {profile.avatar ? (
-              <img src={profile.avatar} alt={profile.name} className="w-24 h-24 rounded-full mx-auto mb-3 object-cover ring-4 ring-blue-50" />
+              <img src={profile.avatar} alt={profile.name} className="w-28 h-28 rounded-full mx-auto mb-3 object-cover ring-4 ring-blue-100 shadow-lg" />
             ) : (
-              <div className="w-24 h-24 rounded-full mx-auto mb-3 bg-blue-600 text-white flex items-center justify-center text-3xl font-bold ring-4 ring-blue-50">
+              <div className="w-28 h-28 rounded-full mx-auto mb-3 bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-4xl font-bold ring-4 ring-blue-100 shadow-lg">
                 {profile.name?.charAt(0) || 'U'}
               </div>
             )}

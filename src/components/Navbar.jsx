@@ -399,9 +399,17 @@ export default function Navbar({ user, onLogout }) {
                     onClick={() => { setDropOpen(!dropOpen); setNotifOpen(false); }}
                     className="flex items-center gap-2 rounded-xl border border-transparent p-1.5 transition-colors hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
-                    <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center text-xs font-semibold">
-                      {userInitials}
-                    </div>
+                    {user.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.name} 
+                        className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center text-xs font-semibold">
+                        {userInitials}
+                      </div>
+                    )}
                     <span className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300">
                       {user.name}
                     </span>
