@@ -403,7 +403,7 @@ export default function EventDetailPage() {
                   <CheckCircle2 size={20} />
                   <div>
                     <p className="font-semibold text-sm">You're registered!</p>
-                    <p className="text-xs text-green-600">Check your email for details.</p>
+                    {/* <p className="text-xs text-green-600">Check your email for details.</p> */}
                   </div>
                 </div>
                 <button
