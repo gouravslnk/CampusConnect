@@ -23,6 +23,7 @@ export default function DeveloperCard({
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'U';
+  const avatarUrl = dev.avatar || dev.avatar_url || dev.avatarUrl || dev.profile_image_url || dev.image || null;
 
   const handleCardClick = () => {
     if (onOpenProfile) onOpenProfile(dev);
@@ -52,9 +53,17 @@ export default function DeveloperCard({
     >
 
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-14 h-14 rounded-full bg-slate-900 text-white ring-2 ring-blue-100 flex-shrink-0 flex items-center justify-center font-semibold text-sm">
-          {initials}
-        </div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={dev.name}
+            className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-100 flex-shrink-0"
+          />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-slate-900 text-white ring-2 ring-blue-100 flex-shrink-0 flex items-center justify-center font-semibold text-sm">
+            {initials}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-bold text-gray-900">{dev.name}</h3>

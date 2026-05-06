@@ -3,7 +3,7 @@ import { Bot, ChevronUp, Loader2, Maximize2, MessageSquare, Send, Sparkles, User
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { answerCampusQuestion, getQuickPrompts } from '../lib/campusAssistant';
+import { answerQuestion, getQuickPrompts } from '../lib/campusAssistant';
 
 function formatMessage(text) {
   return String(text || '').split('\n').map((line, index) => {
@@ -44,7 +44,7 @@ export default function FloatingAIChatbot() {
     {
       id: 'welcome',
       from: 'assistant',
-      text: 'Hi, I am Campus AI. Ask me about events, teammates, ideas, or what to prepare for next.',
+      text: 'Hi, I am your Campus AI assistant. Ask me about upcoming events, teammates, event ideas, project pitches, or how to prepare.',
     },
   ]);
 
@@ -91,11 +91,15 @@ export default function FloatingAIChatbot() {
     setMessages((current) => [...current, { id: Date.now(), from: 'user', text: clean }]);
     setThinking(true);
 
-    window.setTimeout(() => {
-      const answer = answerCampusQuestion(clean, { events, students, user });
-      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: answer }]);
+    try {
+      const { text: answer, usedLLM } = await answerQuestion(clean, { events, students, user });
+      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: answer, usedLLM }]);
+    } catch (error) {
+      console.error('Error getting assistant response:', error);
+      setMessages((current) => [...current, { id: Date.now() + 1, from: 'assistant', text: 'Sorry, I encountered an error. Please try again.' }]);
+    } finally {
       setThinking(false);
-    }, 350);
+    }
   };
 
   const toggleOpen = () => setOpen((current) => !current);

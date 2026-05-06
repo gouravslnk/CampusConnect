@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bot, CalendarDays, Loader2, Send, Sparkles, UserRound, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { answerCampusQuestion, getQuickPrompts } from '../lib/campusAssistant';
+import { answerQuestion, getQuickPrompts } from '../lib/campusAssistant';
 
 function formatMessage(text) {
   return String(text || '').split('\n').map((line, index) => {
@@ -90,14 +90,21 @@ export default function AIAssistantPage() {
     setMessages((current) => [...current, { id: Date.now(), from: 'user', text: clean }]);
     setThinking(true);
 
-    window.setTimeout(() => {
-      const answer = answerCampusQuestion(clean, { events, students, user });
+    try {
+      const { text: answer, usedLLM } = await answerQuestion(clean, { events, students, user });
       setMessages((current) => [
         ...current,
-        { id: Date.now() + 1, from: 'assistant', text: answer },
+        { id: Date.now() + 1, from: 'assistant', text: answer, usedLLM },
       ]);
+    } catch (error) {
+      console.error('Error getting assistant response:', error);
+      setMessages((current) => [
+        ...current,
+        { id: Date.now() + 1, from: 'assistant', text: 'Sorry, I encountered an error. Please try again.' },
+      ]);
+    } finally {
       setThinking(false);
-    }, 450);
+    }
   };
 
   const upcomingCount = events.filter((event) => {

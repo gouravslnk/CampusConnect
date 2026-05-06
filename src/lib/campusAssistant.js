@@ -38,30 +38,64 @@ const QUICK_PROMPTS = [
   'How should I prepare for upcoming events?',
 ];
 
-function normalize(value) {
-  return String(value || '').toLowerCase();
-}
-
-function formatDate(date, time) {
-  if (!date) return 'date not set';
-  const parsed = new Date(date);
-  const day = Number.isNaN(parsed.getTime())
-    ? date
-    : parsed.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-  return time ? `${day} at ${String(time).slice(0, 5)}` : day;
-}
-
-function getUpcomingEvents(events) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return events
-    .filter((event) => new Date(event.date) >= today && event.status !== 'closed' && event.status !== 'cancelled')
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-}
-
-function getEventByQuestion(events, question) {
+// Check if a question can be answered using local heuristics and DB data.
+// Returns true if the question matches campus-specific patterns we can handle locally.
+function canAnswerLocally(question) {
   const q = normalize(question);
-  return events.find((event) => q.includes(normalize(event.title))) || getUpcomingEvents(events)[0] || events[0];
+
+  // Local keywords that we can confidently answer from DB and heuristics
+  const localKeywords = [
+    'event', 'events', 'upcoming', 'next', 'coming',
+    'team', 'teammate', 'teammates', 'partner', 'available',
+    'idea', 'ideas', 'project', 'projects', 'pitch',
+    'prepare', 'preparation', 'get ready',
+    'skill', 'skills', 'profile'
+  ];
+
+  const hasLocalKeyword = localKeywords.some((k) => q.includes(k));
+  return hasLocalKeyword && q.length < 150; // Avoid very long or unusual questions
+}
+
+// Call Gemini API only if question can't be answered locally.
+// Returns { text, usedLLM } where usedLLM indicates if Gemini was called.
+async function getHybridAnswer(question, context) {
+  if (!question?.trim()) return { text: answerHelp(), usedLLM: false };
+
+  // Try local heuristic first (fast, no API cost)
+  if (canAnswerLocally(question)) {
+    const localAnswer = answerCampusQuestion(question, context);
+    return { text: localAnswer, usedLLM: false };
+  }
+
+  // Question can't be answered locally → try Gemini if available
+  try {
+    // Check if Vercel env is set up and endpoint exists
+    const endpoint = process.env.REACT_APP_GEMINI_ENDPOINT || process.env.VITE_GEMINI_ENDPOINT;
+    if (!endpoint) {
+      // Fallback to local answer with disclaimer
+      const localAnswer = answerCampusQuestion(question, context);
+      return {
+        text: `${localAnswer}\n\n(Note: This is a local response. More detailed answers require server setup.)`,
+        usedLLM: false,
+      };
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, context: { eventCount: context.events?.length || 0 } }),
+    });
+
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+    const data = await response.json();
+    return { text: data.text || 'I could not generate a response.', usedLLM: true };
+  } catch (error) {
+    console.warn('[Campus AI] Gemini fallback failed, using local logic:', error);
+    // Fallback to local answer if API call fails
+    const localAnswer = answerCampusQuestion(question, context);
+    return { text: localAnswer, usedLLM: false };
+  }
 }
 
 function userSkillSet(user) {
@@ -203,6 +237,20 @@ export function answerCampusQuestion(question, context) {
   const { events = [], students = [], user = null } = context;
 
   if (!q.trim()) return answerHelp();
+
+  // Enforce strict allowed-topic scope. If the question doesn't contain any
+  // allowed keywords, refuse and prompt the user to ask campus-specific questions.
+  const allowedKeywords = [
+    'event', 'events', 'upcoming', 'next', 'team', 'teammate', 'teammates', 'partner', 'available',
+    'idea', 'ideas', 'project', 'projects', 'pitch', 'prepare', 'preparation', 'skill', 'skills', 'profile',
+    'match', 'recommend', 'how', 'what', 'help'
+  ];
+
+  const containsAllowed = allowedKeywords.some((k) => q.includes(k));
+  if (!containsAllowed) {
+    return 'Sorry — I can only answer questions about this CampusConnect workspace: upcoming events, teammates, project ideas/pitches, and how to prepare. Please ask about events, teammates, skills, or project ideas.';
+  }
+
   if (q.includes('upcoming') || q.includes('coming') || q.includes('events') || q.includes('next event')) {
     if (q.includes('idea') || q.includes('project') || q.includes('present')) return answerIdeas(events, user, question);
     if (q.includes('fit') || q.includes('best') || q.includes('recommend')) return answerBestEvents(events, user);
@@ -222,4 +270,10 @@ export function answerCampusQuestion(question, context) {
   }
 
   return `${answerHelp()}\n\nFor your question, I would start by checking upcoming events and matching them with your skills. Try asking: "Which event fits my skills?"`;
+}
+
+// Hybrid function: answers locally if possible, falls back to Gemini if needed.
+// Use this in UI components instead of answerCampusQuestion() directly.
+export async function answerQuestion(question, context) {
+  return getHybridAnswer(question, context);
 }

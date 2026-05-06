@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
@@ -6,6 +7,8 @@ import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import DevelopersPage from './pages/DevelopersPage';
@@ -24,6 +27,7 @@ import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
 import FloatingAIChatbot from './components/FloatingAIChatbot';
 import { supabase } from './lib/supabase';
+import { expirePastEvents } from './lib/eventUtils';
 
 // Route guard for authenticated pages
 function PrivateRoute({ user, children }) {
@@ -57,6 +61,11 @@ function AppContent() {
     await supabase.auth.signOut();
   };
 
+  // Expire past events on app load (best-effort)
+  useEffect(() => {
+    expirePastEvents();
+  }, []);
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center p-4"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
   }
@@ -77,6 +86,8 @@ function AppContent() {
         {/* Auth pages - no navbar/footer wrapper for cleaner look */}
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
         <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+        <Route path="/forgot-password" element={user ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected routes */}
         <Route

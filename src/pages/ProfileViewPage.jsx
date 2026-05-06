@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Github, Linkedin, Mail, Plus, MessageSquare, Code2, Briefcase } from 'lucide-react';
+import { Github, Linkedin, Mail, Plus, MessageSquare, Code2, Briefcase, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -23,7 +23,7 @@ export default function ProfileViewPage() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, projects(*)')
+        .select('*, projects(*), past_events(*)')
         .eq('id', profileId)
         .single();
 
@@ -31,6 +31,7 @@ export default function ProfileViewPage() {
         setProfile({
           ...data,
           projects: data.projects || [],
+          past_events: data.past_events || [],
           skills: data.skills || []
         });
       }
@@ -300,6 +301,48 @@ export default function ProfileViewPage() {
             </div>
           </div>
 
+          <div className="card p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900">Events</h3>
+            </div>
+
+            {(!profile.past_events || profile.past_events.length === 0) ? (
+              <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                <Briefcase size={32} className="mx-auto text-gray-300 mb-2" />
+                <p className="text-sm text-gray-500 font-medium">No events added yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {profile.past_events.map((ev) => (
+                  <div key={ev.id} className="border border-gray-200 bg-white rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
+                    <h4 className="font-bold text-gray-900 text-base">{ev.title}</h4>
+                    {ev.role && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{ev.role}</span>}
+                    {ev.date && (() => {
+                      const raw = String(ev.date);
+                      let display = raw;
+
+                      // ISO full date (YYYY-MM-DD or with time) -> format to locale date
+                      if (/^\d{4}-\d{2}-\d{2}/.test(raw) || /^\d{4}\/\d{2}\/\d{2}/.test(raw) || /^\d{4}-\d{2}-\d{2}T/.test(raw)) {
+                        const parsed = new Date(raw);
+                        if (!isNaN(parsed)) display = parsed.toLocaleDateString();
+                      } else if (/^\d{4}-\d{2}$/.test(raw)) {
+                        // Year-month only stored as YYYY-MM -> show "Mon YYYY"
+                        const parsed = new Date(raw + '-01');
+                        if (!isNaN(parsed)) display = parsed.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+                      } else {
+                        // If user typed something like "Oct 2023" or "2023", show as-is
+                        display = raw;
+                      }
+
+                      return <p className="text-xs text-gray-400 mt-2">{display}</p>;
+                    })()}
+                    <p className="text-sm text-gray-600 mt-3 line-clamp-3 leading-relaxed">{ev.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="card p-6 shadow-sm border-t-4 border-t-indigo-500">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-gray-900">Projects & Portfolio</h3>
@@ -314,7 +357,15 @@ export default function ProfileViewPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.projects.map((project) => (
                   <div key={project.id} className="border border-gray-200 bg-white rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
-                    <h4 className="font-bold text-gray-900 text-base">{project.title}</h4>
+                    <h4 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                      {project.link ? (
+                        <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                          {project.title} <ExternalLink size={14} className="text-gray-400" />
+                        </a>
+                      ) : (
+                        project.title
+                      )}
+                    </h4>
                     {project.tech && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{project.tech}</span>}
                     <p className="text-sm text-gray-600 mt-3 line-clamp-3 leading-relaxed">{project.description}</p>
                   </div>
