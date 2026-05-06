@@ -83,21 +83,6 @@ CREATE TABLE IF NOT EXISTS public.event_registrations (
     UNIQUE(event_id, profile_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.event_reminders (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    registration_id UUID REFERENCES public.event_registrations(id) ON DELETE CASCADE,
-    event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
-    profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-    reminder_type TEXT NOT NULL CHECK (reminder_type IN ('confirmation', '24h', '2h')),
-    sent_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    UNIQUE(registration_id, reminder_type)
-);
-
-CREATE INDEX IF NOT EXISTS idx_event_reminders_registration ON public.event_reminders(registration_id);
-CREATE INDEX IF NOT EXISTS idx_event_reminders_profile ON public.event_reminders(profile_id);
-CREATE INDEX IF NOT EXISTS idx_event_reminders_event ON public.event_reminders(event_id);
-
 CREATE TABLE IF NOT EXISTS public.bookmarks (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
