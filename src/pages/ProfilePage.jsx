@@ -51,7 +51,7 @@ export default function ProfilePage() {
              setGithubUsername(pathParts[0]);
            }
         }
-      } catch (e) {
+      } catch {
         // Invalid URL, leave empty
       }
     }
@@ -66,7 +66,7 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error('User not found or API error');
       const data = await res.json();
       setGithubRepos(data.filter(repo => !repo.fork));
-    } catch (err) {
+    } catch {
       showToast('Failed to fetch repositories. Check username.', { type: 'error' });
     } finally {
       setFetchingRepos(false);

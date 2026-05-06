@@ -28,7 +28,7 @@ export async function uploadFile(file, bucket, userId) {
     const filename = `${userId}-${timestamp}-${random}${getFileExtension(file.name)}`;
 
     // Upload file
-    const { data, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(bucket)
       .upload(filename, file, {
         cacheControl: '3600',
