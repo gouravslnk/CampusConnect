@@ -69,16 +69,9 @@ async function getHybridAnswer(question, context) {
 
   // Question can't be answered locally → try Gemini if available
   try {
-    // Check if Vercel env is set up and endpoint exists
-    const endpoint = process.env.REACT_APP_GEMINI_ENDPOINT || process.env.VITE_GEMINI_ENDPOINT;
-    if (!endpoint) {
-      // Fallback to local answer with disclaimer
-      const localAnswer = answerCampusQuestion(question, context);
-      return {
-        text: `${localAnswer}\n\n(Note: This is a local response. More detailed answers require server setup.)`,
-        usedLLM: false,
-      };
-    }
+    // Use relative endpoint path (works with Vercel auto-deployment)
+    // On local dev, this should be proxied by Vite config
+    const endpoint = '/api/assistant';
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -86,12 +79,20 @@ async function getHybridAnswer(question, context) {
       body: JSON.stringify({ question, context: { eventCount: context.events?.length || 0 } }),
     });
 
-    if (!response.ok) throw new Error(`Server error: ${response.status}`);
+    if (!response.ok) {
+      // If endpoint fails, fall back to local logic
+      if (response.status === 404 || response.status === 503) {
+        console.warn('[Campus AI] Endpoint not available, using local logic');
+        const localAnswer = answerCampusQuestion(question, context);
+        return { text: localAnswer, usedLLM: false };
+      }
+      throw new Error(`Server error: ${response.status}`);
+    }
 
     const data = await response.json();
     return { text: data.text || 'I could not generate a response.', usedLLM: true };
   } catch (error) {
-    console.warn('[Campus AI] Gemini fallback failed, using local logic:', error);
+    console.warn('[Campus AI] Gemini call failed, using local logic:', error);
     // Fallback to local answer if API call fails
     const localAnswer = answerCampusQuestion(question, context);
     return { text: localAnswer, usedLLM: false };
