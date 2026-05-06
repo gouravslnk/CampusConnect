@@ -1,4 +1,4 @@
-import { extractSkillSignals, recommendStudents } from './aiTeamMatcher';
+import { extractSkillSignals, recommendStudents, normalizeSkill } from './aiTeamMatcher';
 
 const IDEA_BANK = {
   Hackathon: [
@@ -89,7 +89,7 @@ async function getHybridAnswer(question, context) {
 }
 
 function userSkillSet(user) {
-  return (user?.skills || []).map((skill) => normalize(skill));
+  return (user?.skills || []).map((skill) => normalizeSkill(skill));
 }
 
 function scoreEventForUser(event, user) {
@@ -100,7 +100,7 @@ function scoreEventForUser(event, user) {
     tags: event.tags || [],
   });
   const skills = userSkillSet(user);
-  const matched = signals.filter((skill) => skills.includes(normalize(skill)));
+  const matched = signals.filter((skill) => skills.includes(normalizeSkill(skill)));
   const categoryBoost = event.category === 'Hackathon' ? 8 : event.category === 'Workshop' ? 6 : 3;
   const seatsLeft = Math.max((event.max_seats || 0) - (event.registrations || 0), 0);
   const seatBoost = seatsLeft > 0 ? 8 : -20;

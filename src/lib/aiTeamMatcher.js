@@ -5,23 +5,49 @@ const STOP_WORDS = new Set([
 ]);
 
 const SKILL_ALIASES = {
+  // JavaScript
   js: 'javascript',
   javascript: 'javascript',
   reactjs: 'react',
   nodejs: 'node',
   'node.js': 'node',
+  'node js': 'node',
+  
+  // UI/UX
   ui: 'ui design',
   ux: 'ui design',
-  ml: 'machine learning',
-  ai: 'artificial intelligence',
+  'ui design': 'ui design',
+  'ux design': 'ui design',
+  
+  // AI/ML variations - all map to 'ai ml'
+  ml: 'ai ml',
+  'machine learning': 'ai ml',
+  ai: 'ai ml',
+  'artificial intelligence': 'ai ml',
+  'ai/ml': 'ai ml',
+  'ai-ml': 'ai ml',
+  'ai ml': 'ai ml',
+  'ml/ai': 'ai ml',
+  'ml-ai': 'ai ml',
+  'ml ai': 'ai ml',
+  'deep learning': 'ai ml',
+  'nlp': 'ai ml',
+  'natural language processing': 'ai ml',
+  
+  // Other common variations
+  'c++': 'cpp',
+  'c#': 'csharp',
+  'node.js': 'node',
 };
 
 export function normalizeSkill(value) {
   return String(value || '')
     .trim()
     .toLowerCase()
-    .replace(/[#.]/g, '')
-    .replace(/\s+/g, ' ');
+    .replace(/[#.]/g, '')           // Remove # and . from C# and C++
+    .replace(/[\s/\-+]+/g, ' ')    // Replace spaces, slashes, dashes, plus with space (ai/ml, ai-ml, c++)
+    .trim()                          // Clean up extra spaces
+    .replace(/\s+/g, ' ');          // Normalize multiple spaces to single space
 }
 
 function canonicalSkill(value) {
