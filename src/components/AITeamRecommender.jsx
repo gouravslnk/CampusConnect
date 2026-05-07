@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BrainCircuit, Check, Loader2, MessageSquare, Sparkles, Users, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { buildSuggestedTeam, extractSkillSignals, recommendStudents } from '../lib/aiTeamMatcher';
+import { buildSuggestedTeam, extractSkillSignals, normalizeSkill, recommendStudents } from '../lib/aiTeamMatcher';
 
 function initials(name) {
   return String(name || 'User')
@@ -20,6 +20,19 @@ function toProfile(profile) {
     skills: profile.skills || [],
     available: profile.available !== false,
   };
+}
+
+function mergeSkills(...skillLists) {
+  const seen = new Set();
+  return skillLists
+    .flat()
+    .filter(Boolean)
+    .filter((skill) => {
+      const key = normalizeSkill(skill);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 export default function AITeamRecommender({
@@ -48,8 +61,14 @@ export default function AITeamRecommender({
       });
     }
 
-    // For projects, only use explicit skills from the Required skills section
-    return project?.skills || [];
+    return mergeSkills(
+      project?.skills || [],
+      extractSkillSignals({
+        title: project?.title,
+        description: project?.description,
+        explicitSkills: project?.skills || [],
+      })
+    );
   }, [contextType, event, project]);
 
   const recommendations = useMemo(
@@ -75,8 +94,7 @@ export default function AITeamRecommender({
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*, projects(id)')
-        .eq('role', 'student')
-        .eq('available', true);
+        .eq('role', 'student');
 
       if (fetchError) {
         setError('Could not load available students. Please confirm the profiles.available column exists in Supabase.');
@@ -84,7 +102,7 @@ export default function AITeamRecommender({
         return;
       }
 
-      setStudents((data || []).map(toProfile).filter((profile) => profile.id !== user.id));
+      setStudents((data || []).map(toProfile).filter((profile) => profile.id !== user.id && profile.available !== false));
       setLoading(false);
     }
 
@@ -115,6 +133,44 @@ export default function AITeamRecommender({
       contextType === 'event'
         ? `Team created for ${event?.title || 'this event'}. Suggested skills: ${requiredSkills.join(', ') || 'general collaboration'}.`
         : `Team created for ${project?.title || 'this project'}. Suggested skills: ${requiredSkills.join(', ') || 'general collaboration'}.`;
+
+    const { data: team, error: teamError } = await supabase
+      .from('teams')
+      .insert([{
+        name: teamName,
+        owner_id: user.id,
+        event_id: contextType === 'event' ? event?.id || null : null,
+        team_type: contextType === 'event' ? 'event' : 'project',
+        project_title: contextType === 'project' ? project?.title || 'Student project' : null,
+        project_description: contextType === 'project' ? project?.description || '' : null,
+        required_skills: requiredSkills.map((skill) => normalizeSkill(skill)),
+      }])
+      .select()
+      .single();
+
+    if (teamError) {
+      setError('Could not save the team. Please check your team table permissions.');
+      setCreating(false);
+      return;
+    }
+
+    const teamMemberRows = [
+      { team_id: team.id, profile_id: user.id, role: 'owner', status: 'accepted' },
+      ...selectedMembers.map((member) => ({
+        team_id: team.id,
+        profile_id: member.id,
+        role: 'member',
+        status: 'invited',
+      })),
+    ];
+
+    const { error: teamMembersError } = await supabase.from('team_members').insert(teamMemberRows);
+
+    if (teamMembersError) {
+      setError('Team was saved, but members could not be invited.');
+      setCreating(false);
+      return;
+    }
 
     const { data: conversation, error: conversationError } = await supabase
       .from('conversations')

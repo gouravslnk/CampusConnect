@@ -12,6 +12,12 @@ CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "System admins can update profiles" ON public.profiles;
+CREATE POLICY "System admins can update profiles" ON public.profiles FOR UPDATE USING (public.is_system_admin()) WITH CHECK (public.is_system_admin());
+
+DROP POLICY IF EXISTS "System admins can delete profiles" ON public.profiles;
+CREATE POLICY "System admins can delete profiles" ON public.profiles FOR DELETE USING (public.is_system_admin() AND auth.uid() <> id);
+
 
 -- 2. PROJECTS
 DROP POLICY IF EXISTS "Public projects are viewable by everyone" ON public.projects;
@@ -72,10 +78,15 @@ DROP POLICY IF EXISTS "Registrations are viewable by everyone" ON public.event_r
 CREATE POLICY "Registrations are viewable by everyone" ON public.event_registrations FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can register themselves" ON public.event_registrations;
-CREATE POLICY "Users can register themselves" ON public.event_registrations FOR INSERT WITH CHECK (auth.uid() = profile_id);
+CREATE POLICY "Users can register themselves" ON public.event_registrations FOR INSERT WITH CHECK (
+    auth.uid() = profile_id AND NOT public.is_system_admin()
+);
 
 DROP POLICY IF EXISTS "Users can unregister themselves" ON public.event_registrations;
 CREATE POLICY "Users can unregister themselves" ON public.event_registrations FOR DELETE USING (auth.uid() = profile_id);
+
+DROP POLICY IF EXISTS "System admins can remove registrations" ON public.event_registrations;
+CREATE POLICY "System admins can remove registrations" ON public.event_registrations FOR DELETE USING (public.is_system_admin());
 
 
 -- 5. BOOKMARKS
@@ -186,3 +197,28 @@ BEGIN
         );
     END IF;
 END $$;
+
+
+-- 10. CLUBS / HUBS
+DROP POLICY IF EXISTS "Clubs are viewable by everyone" ON public.clubs;
+CREATE POLICY "Clubs are viewable by everyone" ON public.clubs FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can request hubs" ON public.clubs;
+CREATE POLICY "Users can request hubs" ON public.clubs FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "Hub owners can update pending hubs" ON public.clubs;
+CREATE POLICY "Hub owners can update pending hubs" ON public.clubs FOR UPDATE USING (auth.uid() = owner_id AND status = 'pending');
+
+DROP POLICY IF EXISTS "System admins can update hubs" ON public.clubs;
+CREATE POLICY "System admins can update hubs" ON public.clubs FOR UPDATE USING (public.is_system_admin()) WITH CHECK (public.is_system_admin());
+
+DROP POLICY IF EXISTS "System admins can delete hubs" ON public.clubs;
+CREATE POLICY "System admins can delete hubs" ON public.clubs FOR DELETE USING (public.is_system_admin());
+
+DROP POLICY IF EXISTS "Club members are viewable by members and admins" ON public.club_members;
+CREATE POLICY "Club members are viewable by members and admins" ON public.club_members FOR SELECT USING (
+    profile_id = auth.uid() OR public.is_system_admin()
+);
+
+DROP POLICY IF EXISTS "System admins can manage club members" ON public.club_members;
+CREATE POLICY "System admins can manage club members" ON public.club_members FOR ALL USING (public.is_system_admin()) WITH CHECK (public.is_system_admin());

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar, MapPin, Users, Image, ArrowLeft, Plus, X, Upload, Loader } from 'lucide-react';
 import { allowedClubs, allowedVenues } from '../data/events';
 import { supabase } from '../lib/supabase';
@@ -12,6 +12,7 @@ const categories = ['Hackathon', 'Workshop', 'Seminar', 'Meetup'];
 
 export default function CreateEventPage() {
   const navigate = useNavigate();
+  const { id: editId } = useParams();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [form, setForm] = useState({
@@ -27,6 +28,7 @@ export default function CreateEventPage() {
     description: '',
     tags: [],
     image: null,
+    status: 'available',
   });
   const [tagInput, setTagInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -35,6 +37,15 @@ export default function CreateEventPage() {
   const [error, setError] = useState('');
   const [userClubs, setUserClubs] = useState([]);
   const [fetchingClubs, setFetchingClubs] = useState(true);
+  const [loadingEvent, setLoadingEvent] = useState(Boolean(editId));
+  const isEditing = Boolean(editId);
+
+  const isPastDate = (dateValue) => {
+    if (!dateValue) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(`${dateValue}T00:00:00`) < today;
+  };
 
   useEffect(() => {
     async function fetchUserClubs() {
@@ -52,7 +63,7 @@ export default function CreateEventPage() {
           const clubNames = data.map(c => c.name);
           setUserClubs(clubNames);
           // Auto-select the first club they own
-          setForm(prev => ({ ...prev, club: clubNames[0] }));
+          setForm(prev => ({ ...prev, club: prev.club || clubNames[0] }));
         }
       } catch (err) {
         console.error('Error fetching user clubs:', err);
@@ -63,6 +74,49 @@ export default function CreateEventPage() {
     
     fetchUserClubs();
   }, [user]);
+
+  useEffect(() => {
+    async function fetchEventForEdit() {
+      if (!editId || !user) return;
+
+      const { data, error: fetchError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', editId)
+        .single();
+
+      if (fetchError || !data) {
+        setError(fetchError?.message || 'Event could not be loaded.');
+        setLoadingEvent(false);
+        return;
+      }
+
+      if (data.organizer_id !== user.id && user.role !== 'admin') {
+        setError('You can only edit events you created.');
+        setLoadingEvent(false);
+        return;
+      }
+
+      setForm({
+        title: data.title || '',
+        club: data.club || '',
+        category: data.category || '',
+        date: data.date || '',
+        time: data.time || '',
+        venue: data.venue || '',
+        maxSeats: String(data.max_seats || ''),
+        participation_mode: data.participation_mode || 'solo',
+        maxTeamMembers: String(data.max_team_members || 1),
+        description: data.description || '',
+        tags: data.tags || [],
+        image: data.image || null,
+        status: data.status || 'available',
+      });
+      setLoadingEvent(false);
+    }
+
+    fetchEventForEdit();
+  }, [editId, user]);
 
   const addTag = () => {
     if (tagInput.trim() && !form.tags.includes(tagInput.trim())) {
@@ -101,7 +155,7 @@ export default function CreateEventPage() {
     setSubmitting(true);
     setError('');
 
-    const { error: insertError } = await supabase.from('events').insert([{
+    const payload = {
       title: form.title,
       club: form.club,
       category: form.category,
@@ -114,13 +168,18 @@ export default function CreateEventPage() {
       description: form.description,
       tags: form.tags,
       image: form.image,
+      status: isPastDate(form.date) ? 'closed' : (isEditing ? form.status || 'available' : 'available'),
       organizer_id: user.id
-    }]);
+    };
+
+    const { error: saveError } = isEditing
+      ? await supabase.from('events').update(payload).eq('id', editId)
+      : await supabase.from('events').insert([payload]);
 
     setSubmitting(false);
 
-    if (insertError) {
-       setError(insertError.message);
+    if (saveError) {
+       setError(saveError.message);
     } else {
        setSubmitted(true);
        setTimeout(() => navigate('/dashboard'), 2000);
@@ -132,7 +191,7 @@ export default function CreateEventPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Created!</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event {isEditing ? 'Updated' : 'Created'}!</h2>
           <p className="text-gray-500">Redirecting to dashboard...</p>
         </div>
       </div>
@@ -146,10 +205,18 @@ export default function CreateEventPage() {
       </button>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">Create New Event</h1>
-        <p className="text-gray-500 mt-1">Fill in the details to publish your event on CampusConnect.</p>
+        <h1 className="text-3xl font-extrabold text-gray-900">{isEditing ? 'Edit Event' : 'Create New Event'}</h1>
+        <p className="text-gray-500 mt-1">
+          {isEditing ? 'Update event details on CampusConnect.' : 'Fill in the details to publish your event on CampusConnect.'}
+        </p>
         {error && <p className="text-red-500 text-sm mt-3 p-3 bg-red-50 rounded-lg border border-red-100">{error}</p>}
       </div>
+
+      {loadingEvent ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="card p-6 space-y-5">
@@ -390,10 +457,11 @@ export default function CreateEventPage() {
             Cancel
           </button>
           <button type="submit" disabled={submitting} className="btn-primary flex-1">
-            {submitting ? 'Publishing...' : 'Publish Event'}
+            {submitting ? (isEditing ? 'Saving...' : 'Publishing...') : (isEditing ? 'Save Changes' : 'Publish Event')}
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

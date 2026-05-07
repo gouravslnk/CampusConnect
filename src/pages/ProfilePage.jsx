@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Github, Linkedin, Edit3, Plus, Trash2, Code2, Briefcase, Mail, X, Upload, Loader, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Github, Linkedin, Edit3, Plus, Trash2, Code2, Briefcase, Mail, X, Upload, Loader, AlertTriangle, ExternalLink, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
@@ -301,6 +301,87 @@ export default function ProfilePage() {
 
   if (!profile) {
     return <div className="text-center py-32 text-gray-500">Profile could not be loaded. Ensure your record exists.</div>;
+  }
+
+  const isSystemAdmin = profile.role === 'admin';
+
+  if (isSystemAdmin) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+            <Shield size={14} /> System Admin Profile
+          </div>
+          <h1 className="text-3xl font-extrabold text-slate-900">My Profile</h1>
+          <p className="mt-1 text-sm text-slate-500">This account is for CampusConnect operations and management only.</p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-slate-900 text-4xl font-black text-white ring-4 ring-slate-100">
+              {profile.name?.charAt(0) || 'A'}
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">{profile.name || 'System Admin'}</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-600">System Admin</p>
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+              <Mail size={13} /> {profile.email}
+            </div>
+            <button onClick={() => setShowSettingsModal(true)} className="btn-secondary mt-5 flex w-full items-center justify-center gap-1.5 text-sm">
+              <Edit3 size={15} /> Edit Admin Profile
+            </button>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="font-bold text-slate-900">Admin Scope</h3>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {[
+                'Approve or reject hub requests',
+                'Remove or close platform events',
+                'Remove users from CampusConnect',
+                'View operational counts and moderation queues',
+              ].map((item) => (
+                <div key={item} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              System admins do not participate in events, team building, developer matching, or student connections.
+            </div>
+            <button onClick={() => navigate('/admin')} className="btn-primary mt-6 inline-flex items-center gap-2">
+              <Shield size={16} /> Open Admin Control Center
+            </button>
+          </section>
+        </div>
+
+        {showSettingsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-6 py-4">
+                <h3 className="text-lg font-bold text-slate-900">Edit Admin Profile</h3>
+                <button onClick={() => setShowSettingsModal(false)} className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSaveSettings} className="space-y-4 p-6">
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Display Name</label>
+                  <input type="text" required className="input-field" value={settingsForm.name || ''} onChange={e => setSettingsForm({ ...settingsForm, name: e.target.value })} />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
+                  <input type="email" className="input-field bg-slate-50" value={profile.email || ''} disabled />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowSettingsModal(false)} className="btn-secondary flex-1 py-2.5">Cancel</button>
+                  <button type="submit" disabled={savingSettings} className="btn-primary flex-1 py-2.5">{savingSettings ? 'Saving...' : 'Save Changes'}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

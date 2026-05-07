@@ -58,7 +58,7 @@ const getInitials = (name) =>
 
 export default function LandingPage() {
   const [realStats, setRealStats] = useState([
-    { value: '...', label: 'Active Clubs' },
+    { value: '...', label: 'Clubs on Platform' },
     { value: '...', label: 'Events Hosted' },
     { value: '...', label: 'Students Connected' },
     { value: '...', label: 'Projects Built' },
@@ -73,14 +73,14 @@ export default function LandingPage() {
           { count: studentsCount },
           { count: projectsCount }
         ] = await Promise.all([
-          supabase.from('clubs').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+          supabase.from('clubs').select('*', { count: 'exact', head: true }),
           supabase.from('events').select('*', { count: 'exact', head: true }),
           supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
           supabase.from('projects').select('*', { count: 'exact', head: true })
         ]);
 
         setRealStats([
-          { value: clubsCount || 0, label: 'Active Clubs' },
+          { value: clubsCount || 0, label: 'Clubs on Platform' },
           { value: eventsCount || 0, label: 'Events Hosted' },
           { value: studentsCount || 0, label: 'Students Connected' },
           { value: projectsCount || 0, label: 'Projects Built' },
@@ -196,9 +196,9 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <button className="w-full py-4 rounded-xl bg-slate-900 dark:bg-blue-600 text-white font-bold hover:bg-slate-800 dark:hover:bg-blue-700 transition-colors duration-300">
+              <Link to="/register" className="block w-full py-4 rounded-xl bg-slate-900 dark:bg-blue-600 text-center text-white font-bold hover:bg-slate-800 dark:hover:bg-blue-700 transition-colors duration-300">
                 Apply to Join
-              </button>
+              </Link>
             </div>
 
             {/* Floating Card Left */}

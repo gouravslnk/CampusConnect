@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { BarChart3, TrendingUp, Users, Calendar, PlusCircle, Eye, Trash2, ArrowRight, Power, UserPlus, X, Search, Building, Clock, XCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { BarChart3, TrendingUp, Users, Calendar, PlusCircle, Eye, Trash2, ArrowRight, Power, UserPlus, X, Search, Building, Clock, XCircle, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [dashboardEvents, setDashboardEvents] = useState([]);
   const [stats, setStats] = useState([]);
@@ -27,6 +28,18 @@ export default function DashboardPage() {
   const [clubRequest, setClubRequest] = useState(null);
 
   const isAdmin = user?.role === 'club_admin';
+  const isExpiredEvent = (event) => {
+    if (!event?.date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(`${event.date}T00:00:00`) < today;
+  };
+
+  const getEventStatusLabel = (event) => {
+    if (event.status === 'cancelled') return 'expired';
+    if (isExpiredEvent(event)) return 'expired';
+    return event.status || 'available';
+  };
 
   const fetchDashboardEvents = async () => {
     if (!user) return;
@@ -454,13 +467,20 @@ export default function DashboardPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`badge ${event.status === 'closed' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                      {event.status}
+                    <span className={`badge ${getEventStatusLabel(event) === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {getEventStatusLabel(event)}
                     </span>
                   </td>
                   {isAdmin && (
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => navigate(`/edit-event/${event.id}`)}
+                          title="Edit Event"
+                          className="text-gray-400 hover:text-blue-600 p-1 transition-colors"
+                        >
+                          <Pencil size={15} />
+                        </button>
                         <button 
                           onClick={() => handleViewParticipants(event)}
                           title="Manage Participants"

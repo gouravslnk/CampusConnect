@@ -207,6 +207,10 @@ export default function Navbar({ user, onLogout }) {
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
+  const isSystemAdmin = user?.role === 'admin';
+  const visibleNavLinks = isSystemAdmin
+    ? navLinks.filter((link) => link.requiresSystemAdmin)
+    : navLinks.filter((link) => !link.requiresSystemAdmin);
 
   const markAllAsRead = async () => {
     if (!user || unreadCount === 0) return;
@@ -238,7 +242,7 @@ export default function Navbar({ user, onLogout }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={user ? '/events' : '/'} className="flex items-center gap-2">
+          <Link to={user ? (isSystemAdmin ? '/admin' : '/events') : '/'} className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#0f766e_0%,#2563eb_100%)] shadow-lg shadow-cyan-500/20">
               <span className="text-white font-bold text-sm">CC</span>
             </div>
@@ -248,7 +252,7 @@ export default function Navbar({ user, onLogout }) {
           {/* Desktop Nav */}
           {user && (
             <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => {
+              {visibleNavLinks.map((link) => {
                 if (link.requiresAdmin && user?.role !== 'club_admin') return null;
                 if (link.requiresSystemAdmin && user?.role !== 'admin') return null;
                 return (
@@ -426,11 +430,11 @@ export default function Navbar({ user, onLogout }) {
                         <User size={16} /> My Profile
                       </Link>
                       <Link
-                        to="/dashboard"
+                        to={isSystemAdmin ? '/admin' : '/dashboard'}
                         onClick={() => setDropOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
-                        <MessageSquare size={16} /> Dashboard
+                        <MessageSquare size={16} /> {isSystemAdmin ? 'Admin Dashboard' : 'Dashboard'}
                       </Link>
                       <hr className="my-1 border-slate-100 dark:border-slate-800" />
                       <button
@@ -469,7 +473,7 @@ export default function Navbar({ user, onLogout }) {
         {/* Mobile Menu */}
         {user && menuOpen && (
           <div className="space-y-1 border-t border-slate-100 py-3 md:hidden">
-            {navLinks.map((link) => {
+            {visibleNavLinks.map((link) => {
               if (link.requiresAdmin && user?.role !== 'club_admin') return null;
               if (link.requiresSystemAdmin && user?.role !== 'admin') return null;
               return (

@@ -42,6 +42,11 @@ function SystemAdminRoute({ user, children }) {
   return user?.role === 'admin' ? children : <Navigate to="/events" replace />;
 }
 
+function ParticipantRoute({ user, children }) {
+  if (!user) return <Navigate to="/login" replace />;
+  return user.role === 'admin' ? <Navigate to="/admin" replace /> : children;
+}
+
 // Layout with Navbar + Footer
 function Layout({ user, onLogout, children, withFooter = true }) {
   return (
@@ -49,7 +54,7 @@ function Layout({ user, onLogout, children, withFooter = true }) {
       <Navbar user={user} onLogout={onLogout} />
       <main className="flex-1">{children}</main>
       {withFooter && <Footer />}
-      {user && <FloatingAIChatbot />}
+      {user && user.role !== 'admin' && <FloatingAIChatbot />}
     </div>
   );
 }
@@ -93,61 +98,61 @@ function AppContent() {
         <Route
           path="/events"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <EventsPage />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
           path="/events/:id"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <EventDetailPage />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
           path="/developers"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <DevelopersPage />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
           path="/ai-teams"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <AITeamsPage />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
           path="/ai-assistant"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout} withFooter={false}>
                 <AIAssistantPage />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
           path="/connections"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <ConnectionsPage />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
@@ -173,20 +178,24 @@ function AppContent() {
         <Route
           path="/chat"
           element={
-            <PrivateRoute user={user}>
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout} withFooter={false}>
                 <ChatPage user={user} />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route
           path="/dashboard"
           element={
             <PrivateRoute user={user}>
-              <Layout user={user} onLogout={handleLogout}>
-                <DashboardPage user={user} />
-              </Layout>
+              {user?.role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Layout user={user} onLogout={handleLogout}>
+                  <DashboardPage user={user} />
+                </Layout>
+              )}
             </PrivateRoute>
           }
         />
@@ -203,13 +212,25 @@ function AppContent() {
           }
         />
         <Route
-          path="/clubs"
+          path="/edit-event/:id"
           element={
             <PrivateRoute user={user}>
+              <AdminRoute user={user}>
+                <Layout user={user} onLogout={handleLogout} withFooter={false}>
+                  <CreateEventPage user={user} />
+                </Layout>
+              </AdminRoute>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/clubs"
+          element={
+            <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <ClubsPage user={user} />
               </Layout>
-            </PrivateRoute>
+            </ParticipantRoute>
           }
         />
         <Route

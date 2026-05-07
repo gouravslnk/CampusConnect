@@ -7,6 +7,23 @@ import { useAuth } from '../context/AuthContext';
 const categories = ["All", "Hackathon", "Workshop", "Seminar", "Meetup"];
 const sortOptions = ['Latest', 'Oldest', 'Most Popular', 'Seats Available'];
 
+function isClosedOrExpired(event) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return event.status === 'closed' || event.status === 'cancelled' || new Date(event.date) < today;
+}
+
+function sortWithInactiveLast(a, b, sort) {
+  const inactiveDiff = Number(isClosedOrExpired(a)) - Number(isClosedOrExpired(b));
+  if (inactiveDiff !== 0) return inactiveDiff;
+
+  if (sort === 'Latest') return new Date(b.date) - new Date(a.date);
+  if (sort === 'Oldest') return new Date(a.date) - new Date(b.date);
+  if (sort === 'Most Popular') return b.registrations - a.registrations;
+  if (sort === 'Seats Available') return (b.maxSeats - b.registrations) - (a.maxSeats - a.registrations);
+  return 0;
+}
+
 export default function EventsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState('all'); // 'all' or 'saved'
@@ -30,12 +47,7 @@ export default function EventsPage() {
         return;
       }
 
-      // Format to match expected frontend prop structure and filter out past events
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate day comparison
-
       const formatted = data
-        .filter(e => new Date(e.date) >= today) // Only show upcoming or today's events
         .map(e => ({
           ...e,
           maxSeats: e.max_seats,
@@ -61,14 +73,9 @@ export default function EventsPage() {
         return;
       }
 
-      // Format to match expected frontend prop structure and filter out past events
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       const formatted = data
         .map(b => b.events)
         .filter(Boolean)
-        .filter(e => new Date(e.date) >= today)
         .map(e => ({
           ...e,
           maxSeats: e.max_seats,
@@ -90,13 +97,7 @@ export default function EventsPage() {
       const matchCat = category === 'All' || e.category === category;
       return matchSearch && matchCat;
     })
-    .sort((a, b) => {
-      if (sort === 'Latest') return new Date(b.date) - new Date(a.date);
-      if (sort === 'Oldest') return new Date(a.date) - new Date(b.date);
-      if (sort === 'Most Popular') return b.registrations - a.registrations;
-      if (sort === 'Seats Available') return (a.maxSeats - a.registrations) - (b.maxSeats - b.registrations);
-      return 0;
-    });
+    .sort((a, b) => sortWithInactiveLast(a, b, sort));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

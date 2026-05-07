@@ -41,18 +41,24 @@ const SKILL_ALIASES = {
 };
 
 export function normalizeSkill(value) {
-  return String(value || '')
+  const raw = String(value || '')
     .trim()
     .toLowerCase()
-    .replace(/[#.]/g, '')           // Remove # and . from C# and C++
-    .replace(/[\s/\-+]+/g, ' ')    // Replace spaces, slashes, dashes, plus with space (ai/ml, ai-ml, c++)
-    .trim()                          // Clean up extra spaces
-    .replace(/\s+/g, ' ');          // Normalize multiple spaces to single space
+    .replace(/\s+/g, ' ');
+
+  if (SKILL_ALIASES[raw]) return SKILL_ALIASES[raw];
+
+  const normalized = raw
+    .replace(/[#.]/g, '')
+    .replace(/[\s/\-+]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+
+  return SKILL_ALIASES[normalized] || normalized;
 }
 
 function canonicalSkill(value) {
-  const normalized = normalizeSkill(value);
-  return SKILL_ALIASES[normalized] || normalized;
+  return normalizeSkill(value);
 }
 
 function tokenize(text) {
@@ -142,7 +148,8 @@ export function recommendStudents(students, currentUser, requiredSkills, limit =
 
 export function buildSuggestedTeam(recommendedStudents, currentUser, requiredSkills, teamSize = 4) {
   const picked = [];
-  const covered = new Set(uniqueSkills(currentUser?.skills || []).filter((skill) => requiredSkills.includes(skill)));
+  const required = uniqueSkills(requiredSkills);
+  const covered = new Set(uniqueSkills(currentUser?.skills || []).filter((skill) => required.includes(skill)));
 
   recommendedStudents.forEach((student) => {
     if (picked.length >= Math.max(teamSize - 1, 1)) return;
@@ -153,8 +160,8 @@ export function buildSuggestedTeam(recommendedStudents, currentUser, requiredSki
     }
   });
 
-  const missingSkills = uniqueSkills(requiredSkills).filter((skill) => !covered.has(skill));
-  const coverage = requiredSkills.length ? Math.round((covered.size / requiredSkills.length) * 100) : 100;
+  const missingSkills = required.filter((skill) => !covered.has(skill));
+  const coverage = required.length ? Math.round((covered.size / required.length) * 100) : 100;
 
   return {
     members: picked,

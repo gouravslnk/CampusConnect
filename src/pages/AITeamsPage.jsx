@@ -16,7 +16,7 @@ export default function AITeamsPage() {
   });
 
   const projectContext = useMemo(() => ({
-    title: projectForm.title || 'New student project',
+    title: projectForm.title,
     description: projectForm.description,
     skills: projectForm.skills,
   }), [projectForm.description, projectForm.skills, projectForm.title]);

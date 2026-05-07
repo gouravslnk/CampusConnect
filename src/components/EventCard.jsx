@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Users } from 'lucide-react';
+import { useState } from 'react';
 
 const categoryColors = {
   Hackathon: 'bg-purple-100 text-purple-700',
@@ -12,27 +13,55 @@ const statusColors = {
   available: 'bg-green-100 text-green-700',
   closed: 'bg-red-100 text-red-700',
   ongoing: 'bg-yellow-100 text-yellow-700',
+  cancelled: 'bg-slate-100 text-slate-700',
 };
 
+function isExpired(event) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(event.date) < today;
+}
+
+function getStatusLabel(event) {
+  if (event.status === 'cancelled') return 'Cancelled';
+  if (isExpired(event)) return 'Expired';
+  if (event.status === 'closed') return 'Closed';
+  return 'Available';
+}
+
 export default function EventCard({ event }) {
+  const [imageFailed, setImageFailed] = useState(false);
   const maxSeats = Number(event.maxSeats) || 0;
   const filled = maxSeats > 0 ? Math.round((event.registrations / maxSeats) * 100) : 0;
+  const statusLabel = getStatusLabel(event);
+  const inactive = statusLabel !== 'Available';
+  const showImage = event.image && !imageFailed;
 
   return (
     <div className="card overflow-hidden flex flex-col">
       {/* Image */}
       <div className="relative h-44 overflow-hidden">
-        <img
-          src={event.image}
-          alt={event.title}
-          className="w-full h-full object-cover"
-        />
+        {showImage ? (
+          <img
+            src={event.image}
+            alt={event.title}
+            onError={() => setImageFailed(true)}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-cyan-50 text-center">
+            <div className="px-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{event.category || 'Campus Event'}</p>
+              <p className="mt-2 line-clamp-2 text-lg font-black text-slate-700">{event.title}</p>
+            </div>
+          </div>
+        )}
         <div className="absolute top-3 left-3 flex gap-2">
           <span className={`badge ${categoryColors[event.category] || 'bg-gray-100 text-gray-700'}`}>
             {event.category}
           </span>
-          <span className={`badge ${statusColors[event.status] || 'bg-gray-100 text-gray-700'}`}>
-            {event.status === 'closed' ? 'Closed' : 'Available'}
+          <span className={`badge ${inactive ? 'bg-red-100 text-red-700' : statusColors[event.status] || 'bg-gray-100 text-gray-700'}`}>
+            {statusLabel}
           </span>
         </div>
       </div>
@@ -76,9 +105,9 @@ export default function EventCard({ event }) {
 
         <Link
           to={`/events/${event.id}`}
-          className={`btn-primary text-sm text-center ${event.status === 'closed' ? 'opacity-60 pointer-events-none' : ''}`}
+          className={`btn-primary text-sm text-center ${inactive ? 'bg-slate-700 hover:bg-slate-800' : ''}`}
         >
-          {event.status === 'closed' ? 'Closed' : 'View Details'}
+          View Details
         </Link>
       </div>
     </div>

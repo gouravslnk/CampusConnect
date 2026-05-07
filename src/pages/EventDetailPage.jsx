@@ -15,6 +15,13 @@ function buildEmptyMember(defaults = {}) {
   };
 }
 
+function isExpiredEvent(event) {
+  if (!event?.date) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(event.date) < today;
+}
+
 export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -139,7 +146,7 @@ export default function EventDetailPage() {
 
   const openRegistrationModal = () => {
     if (!user) return navigate('/login');
-    if (event?.status === 'closed' || isAtCapacity) return;
+    if (event?.status === 'closed' || event?.status === 'cancelled' || isExpiredEvent(event) || isAtCapacity) return;
     setShowRegistrationModal(true);
   };
 
@@ -310,6 +317,7 @@ export default function EventDetailPage() {
   const maxSeats = Number(event.maxSeats) || 0;
   const filled = maxSeats > 0 ? Math.round((event.registrations / maxSeats) * 100) : 0;
   const isAtCapacity = maxSeats <= 0 || filled >= 100;
+  const isUnavailable = event.status === 'closed' || event.status === 'cancelled' || isExpiredEvent(event);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -334,8 +342,8 @@ export default function EventDetailPage() {
             <span className="badge bg-slate-100 text-slate-700 capitalize">
               {isTeamEvent ? `Team event • max ${teamMemberLimit} members` : 'Solo event'}
             </span>
-            <span className={`badge ${event.status === 'closed' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-              {event.status === 'closed' ? 'Closed' : 'Available'}
+            <span className={`badge ${isUnavailable ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+              {event.status === 'cancelled' ? 'Cancelled' : isExpiredEvent(event) ? 'Expired' : isUnavailable ? 'Closed' : 'Available'}
             </span>
           </div>
 
@@ -392,10 +400,10 @@ export default function EventDetailPage() {
             {!registered ? (
               <button
                 onClick={openRegistrationModal}
-                disabled={event.status === 'closed' || isAtCapacity}
-                className={`btn-primary w-full ${event.status === 'closed' || isAtCapacity ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isUnavailable || isAtCapacity}
+                className={`btn-primary w-full ${isUnavailable || isAtCapacity ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {event.status === 'closed' ? 'Event Closed' : isAtCapacity ? 'House Full' : 'Register Now'}
+                {event.status === 'cancelled' ? 'Event Cancelled' : isExpiredEvent(event) ? 'Event Expired' : isUnavailable ? 'Event Closed' : isAtCapacity ? 'House Full' : 'Register Now'}
               </button>
             ) : (
               <div className="space-y-2">

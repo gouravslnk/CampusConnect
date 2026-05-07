@@ -41,6 +41,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION public.is_system_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.profiles
+    WHERE id = auth.uid()
+      AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ==========================================
 -- 3. USER MANAGEMENT FUNCTIONS
 -- ==========================================
@@ -52,5 +64,20 @@ BEGIN
   -- Delete the user from auth.users. 
   -- Assuming cascade deletes on foreign keys, this will clean up their profile.
   DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.delete_user_by_admin(target_user_id UUID)
+RETURNS void AS $$
+BEGIN
+  IF NOT public.is_system_admin() THEN
+    RAISE EXCEPTION 'Only system admins can delete users';
+  END IF;
+
+  IF target_user_id = auth.uid() THEN
+    RAISE EXCEPTION 'System admins cannot delete their own account from this action';
+  END IF;
+
+  DELETE FROM auth.users WHERE id = target_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

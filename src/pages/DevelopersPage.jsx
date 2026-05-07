@@ -57,14 +57,17 @@ export default function DevelopersPage() {
 
         if (error) throw error;
         
-        const formattedDevs = data.map(profile => ({
-          ...profile,
-          role: profile.department || 'Student',
-          hackathons: profile.hackathons_won || 0,
-          projects: profile.projects?.length || 0, 
-          available: profile.available !== false,
-          skills: profile.skills || []
-        }));
+        const formattedDevs = data
+          .filter(profile => profile.role !== 'admin')
+          .map(profile => ({
+            ...profile,
+            accountRole: profile.role,
+            role: profile.department || 'Student',
+            hackathons: profile.hackathons_won || 0,
+            projects: profile.projects?.length || 0, 
+            available: profile.available !== false,
+            skills: profile.skills || []
+          }));
 
         setDevelopers(formattedDevs);
 
@@ -168,6 +171,7 @@ export default function DevelopersPage() {
 
   const filtered = developers.filter((dev) => {
     if (user && dev.id === user.id) return false;
+    if (dev.accountRole === 'admin') return false;
 
     const searchLower = search.toLowerCase();
     const matchSearch =
