@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 
 const navLinks = [
   { to: '/events', label: 'Events' },
+  { to: '/clubs', label: 'Clubs' },
   { to: '/developers', label: 'Developers' },
   { to: '/connections', label: 'Connections' },
   { to: '/ai-teams', label: 'Team Builder' },

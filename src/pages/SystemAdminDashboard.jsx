@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building,
   CalendarDays,
@@ -34,6 +35,7 @@ function roleLabel(role) {
 
 export default function SystemAdminDashboard({ user }) {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('clubs');
   const [clubs, setClubs] = useState([]);
   const [events, setEvents] = useState([]);
@@ -41,6 +43,14 @@ export default function SystemAdminDashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [search, setSearch] = useState('');
+  const [manageUser, setManageUser] = useState(null);
+
+  const clubsByOwner = useMemo(() => clubs.reduce((map, club) => {
+    if (!club.owner_id) return map;
+    if (!map[club.owner_id]) map[club.owner_id] = [];
+    map[club.owner_id].push(club);
+    return map;
+  }, {}), [clubs]);
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -166,6 +176,33 @@ export default function SystemAdminDashboard({ user }) {
     }
   };
 
+  const handleDeleteClub = async (club) => {
+    if (!window.confirm(`Delete hub "${club.name}"? This permanently removes the hub and its members.`)) return;
+    setActionLoading(`club-delete-${club.id}`);
+
+    try {
+      const { error } = await supabase.from('clubs').delete().eq('id', club.id);
+      if (error) throw error;
+
+      setClubs((current) => current.filter((item) => item.id !== club.id));
+
+      const remainingOwnedClubs = clubs.filter((item) => item.owner_id === club.owner_id && item.id !== club.id);
+      if (club.owner_id && remainingOwnedClubs.length === 0) {
+        const { error: roleError } = await supabase.from('profiles').update({ role: 'student' }).eq('id', club.owner_id);
+        if (roleError) throw roleError;
+
+        setUsers((current) => current.map((item) => (item.id === club.owner_id ? { ...item, role: 'student' } : item)));
+      }
+
+      showToast('Hub deleted.', { type: 'success' });
+    } catch (err) {
+      console.error('Error deleting hub:', err);
+      showToast(err?.message || 'Failed to delete hub.', { type: 'error' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleToggleEventStatus = async (event) => {
     const nextStatus = event.status === 'closed' ? 'available' : 'closed';
     setActionLoading(`event-${event.id}`);
@@ -216,6 +253,76 @@ export default function SystemAdminDashboard({ user }) {
     setActionLoading(null);
   };
 
+  const handleAssignClubAdmin = async (clubId, targetUserId) => {
+    setActionLoading(`assign-${clubId}`);
+    try {
+      const club = clubs.find(c => c.id === clubId);
+      const oldOwnerId = club?.owner_id;
+
+      // Update club
+      const { error: clubError } = await supabase.from('clubs').update({ owner_id: targetUserId }).eq('id', clubId);
+      if (clubError) throw clubError;
+
+      // Update new owner role
+      const { error: newOwnerError } = await supabase.from('profiles').update({ role: 'club_admin' }).eq('id', targetUserId);
+      if (newOwnerError) throw newOwnerError;
+
+      // Check if old owner needs role demotion
+      let demoteOldOwner = false;
+      if (oldOwnerId && oldOwnerId !== targetUserId) {
+        const remaining = clubs.filter(c => c.owner_id === oldOwnerId && c.id !== clubId);
+        if (remaining.length === 0) {
+          await supabase.from('profiles').update({ role: 'student' }).eq('id', oldOwnerId);
+          demoteOldOwner = true;
+        }
+      }
+
+      // Update local states
+      setClubs(current => current.map(c => c.id === clubId ? { ...c, owner_id: targetUserId } : c));
+      setUsers(current => current.map(u => {
+        if (u.id === targetUserId) return { ...u, role: 'club_admin' };
+        if (demoteOldOwner && u.id === oldOwnerId) return { ...u, role: 'student' };
+        return u;
+      }));
+      
+      showToast('User assigned as hub admin.', { type: 'success' });
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to assign admin.', { type: 'error' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemoveClubAdmin = async (clubId, currentOwnerId) => {
+    setActionLoading(`remove-${clubId}`);
+    try {
+      const { error: clubError } = await supabase.from('clubs').update({ owner_id: null }).eq('id', clubId);
+      if (clubError) throw clubError;
+
+      let demoteOwner = false;
+      if (currentOwnerId) {
+        const remaining = clubs.filter(c => c.owner_id === currentOwnerId && c.id !== clubId);
+        if (remaining.length === 0) {
+          await supabase.from('profiles').update({ role: 'student' }).eq('id', currentOwnerId);
+          demoteOwner = true;
+        }
+      }
+
+      setClubs(current => current.map(c => c.id === clubId ? { ...c, owner_id: null } : c));
+      if (demoteOwner) {
+        setUsers(current => current.map(u => u.id === currentOwnerId ? { ...u, role: 'student' } : u));
+      }
+
+      showToast('Hub admin removed.', { type: 'success' });
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to remove admin.', { type: 'error' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const renderClubs = () => (
     <div className="divide-y divide-slate-100">
       {filteredClubs.length === 0 ? (
@@ -225,7 +332,15 @@ export default function SystemAdminDashboard({ user }) {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-bold text-slate-900">{club.name}</h3>
+                <button
+                  type="button"
+                  onClick={() => club.owner_id && navigate(`/profile/${club.owner_id}`)}
+                  disabled={!club.owner_id}
+                  className="font-bold text-slate-900 text-left transition hover:text-cyan-700 disabled:cursor-default disabled:hover:text-slate-900"
+                  title={club.owner_id ? 'Open the hub owner profile' : 'No hub owner available'}
+                >
+                  {club.name}
+                </button>
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold capitalize ${
                   club.status === 'approved' ? 'bg-emerald-50 text-emerald-700' : club.status === 'rejected' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
                 }`}>
@@ -253,6 +368,13 @@ export default function SystemAdminDashboard({ user }) {
                 className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <X size={15} /> Reject
+              </button>
+              <button
+                onClick={() => handleDeleteClub(club)}
+                disabled={actionLoading === `club-delete-${club.id}`}
+                className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Trash2 size={15} /> Delete
               </button>
             </div>
           </div>
@@ -323,6 +445,7 @@ export default function SystemAdminDashboard({ user }) {
           <tr>
             <th className="px-5 py-3">User</th>
             <th className="px-5 py-3">Role</th>
+            <th className="px-5 py-3">Hub</th>
             <th className="px-5 py-3">Department</th>
             <th className="px-5 py-3">Joined</th>
             <th className="px-5 py-3">Actions</th>
@@ -330,11 +453,16 @@ export default function SystemAdminDashboard({ user }) {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {filteredUsers.length === 0 ? (
-            <tr><td colSpan="5" className="px-5 py-8 text-center text-slate-500">No users match your search.</td></tr>
+            <tr><td colSpan="6" className="px-5 py-8 text-center text-slate-500">No users match your search.</td></tr>
           ) : filteredUsers.map((profile) => (
             <tr key={profile.id} className="hover:bg-slate-50/70">
               <td className="px-5 py-4">
-                <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/profile/${profile.id}`)}
+                  className="flex items-center gap-3 text-left transition hover:opacity-80"
+                  title="Open profile"
+                >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
                     {(profile.name || profile.email || 'U').charAt(0).toUpperCase()}
                   </div>
@@ -342,23 +470,38 @@ export default function SystemAdminDashboard({ user }) {
                     <p className="font-semibold text-slate-900">{profile.name || 'Unnamed user'}</p>
                     <p className="text-xs text-slate-500">{profile.email}</p>
                   </div>
-                </div>
+                </button>
               </td>
               <td className="px-5 py-4">
                 <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${profile.role === 'admin' ? 'bg-slate-900 text-white' : profile.role === 'club_admin' ? 'bg-indigo-50 text-indigo-700' : 'bg-cyan-50 text-cyan-700'}`}>
                   {roleLabel(profile.role)}
                 </span>
               </td>
+              <td className="px-5 py-4 text-slate-600">
+                {profile.role === 'club_admin'
+                  ? (clubsByOwner[profile.id]?.length
+                    ? clubsByOwner[profile.id].map((club) => club.name).join(', ')
+                    : 'Hub not found')
+                  : '-'}
+              </td>
               <td className="px-5 py-4 text-slate-600">{profile.department || '-'}</td>
               <td className="px-5 py-4 text-slate-600">{formatDate(profile.created_at)}</td>
               <td className="px-5 py-4">
-                <button
-                  onClick={() => handleDeleteUser(profile)}
-                  disabled={profile.id === user?.id || actionLoading === `user-${profile.id}`}
-                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Trash2 size={15} /> Remove
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setManageUser(profile)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                  >
+                    <Building size={14} /> Hubs
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(profile)}
+                    disabled={profile.id === user?.id || actionLoading === `user-${profile.id}`}
+                    className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Trash2 size={14} /> Remove
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -442,6 +585,63 @@ export default function SystemAdminDashboard({ user }) {
           </>
         )}
       </div>
+
+      {manageUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Manage Hub Admin</h3>
+                <p className="text-sm text-gray-500">{manageUser.name || manageUser.email}</p>
+              </div>
+              <button
+                onClick={() => setManageUser(null)}
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <h4 className="font-semibold text-slate-900 mb-3 text-sm uppercase tracking-wide">Approved Hubs</h4>
+              <div className="space-y-3">
+                {clubs.filter(c => c.status === 'approved').length === 0 && (
+                  <p className="text-sm text-slate-500">No approved hubs available.</p>
+                )}
+                {clubs.filter(c => c.status === 'approved').map(club => {
+                  const isOwner = club.owner_id === manageUser.id;
+                  return (
+                    <div key={club.id} className="flex items-center justify-between p-3 border border-slate-100 rounded-xl hover:border-slate-200 transition">
+                      <div>
+                        <p className="font-semibold text-slate-900 text-sm">{club.name}</p>
+                        <p className="text-xs text-slate-500">
+                           {isOwner ? 'Current Admin' : (club.owner_id ? 'Has another admin' : 'No admin assigned')}
+                        </p>
+                      </div>
+                      {isOwner ? (
+                        <button
+                          onClick={() => handleRemoveClubAdmin(club.id, manageUser.id)}
+                          disabled={actionLoading === `remove-${club.id}`}
+                          className="px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition disabled:opacity-50"
+                        >
+                          Remove Admin
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAssignClubAdmin(club.id, manageUser.id)}
+                          disabled={actionLoading === `assign-${club.id}`}
+                          className="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition disabled:opacity-50"
+                        >
+                          Make Admin
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

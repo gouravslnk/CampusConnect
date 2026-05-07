@@ -19,6 +19,7 @@ import ChatPage from './pages/ChatPage';
 import DashboardPage from './pages/DashboardPage';
 import CreateEventPage from './pages/CreateEventPage';
 import ClubsPage from './pages/ClubsPage';
+import ClubDetailPage from './pages/ClubDetailPage';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
 import AITeamsPage from './pages/AITeamsPage';
 import AIAssistantPage from './pages/AIAssistantPage';
@@ -229,6 +230,26 @@ function AppContent() {
             <ParticipantRoute user={user}>
               <Layout user={user} onLogout={handleLogout}>
                 <ClubsPage user={user} />
+              </Layout>
+            </ParticipantRoute>
+          }
+        />
+        <Route
+          path="/clubs/:id"
+          element={
+            <ParticipantRoute user={user}>
+              <Layout user={user} onLogout={handleLogout}>
+                <ClubDetailPage />
+              </Layout>
+            </ParticipantRoute>
+          }
+        />
+        <Route
+          path="/clubs/:id"
+          element={
+            <ParticipantRoute user={user}>
+              <Layout user={user} onLogout={handleLogout}>
+                <ClubDetailPage />
               </Layout>
             </ParticipantRoute>
           }

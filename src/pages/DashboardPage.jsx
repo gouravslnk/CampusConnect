@@ -28,6 +28,14 @@ export default function DashboardPage() {
   const [clubRequest, setClubRequest] = useState(null);
 
   const isAdmin = user?.role === 'club_admin';
+  const [viewMode, setViewMode] = useState(user?.role === 'club_admin' ? 'club' : 'student');
+
+  useEffect(() => {
+    if (user?.role === 'club_admin') {
+      setViewMode('club');
+    }
+  }, [user?.role]);
+
   const isExpiredEvent = (event) => {
     if (!event?.date) return false;
     const today = new Date();
@@ -43,6 +51,7 @@ export default function DashboardPage() {
 
   const fetchDashboardEvents = async () => {
     if (!user) return;
+    setLoading(true);
     
     let fetchedEvents = [];
     let calcStats = [];
@@ -60,7 +69,7 @@ export default function DashboardPage() {
 
     const catCounts = { 'Hackathon': 0, 'Workshop': 0, 'Seminar': 0, 'Meetup': 0, 'Other': 0 };
 
-    if (isAdmin) {
+    if (viewMode === 'club') {
       const { data, error } = await supabase
         .from('events')
         .select('*, event_registrations(count)')
@@ -171,7 +180,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDashboardEvents();
     fetchClubRequest();
-  }, [user]);
+  }, [user, viewMode]);
 
   const fetchClubRequest = async () => {
     if (!user) return;
@@ -304,24 +313,42 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900">
-            {isAdmin ? 'Club Dashboard' : 'Student Dashboard'}
+            {viewMode === 'club' ? 'Club Dashboard' : 'Student Dashboard'}
           </h1>
           <p className="text-gray-500 mt-1">
-            {isAdmin ? 'Manage your events and track performance.' : 'Track your active event registrations and stats.'}
+            {viewMode === 'club' ? 'Manage your events and track performance.' : 'Track your active event registrations and stats.'}
           </p>
         </div>
-        {isAdmin ? (
-          <Link to="/create-event" className="btn-primary flex items-center gap-2">
-            <PlusCircle size={18} /> Create Event
-          </Link>
-        ) : (
-          <Link to="/events" className="btn-primary flex items-center gap-2">
-            Participate in event <ArrowRight size={18} />
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-4">
+          {isAdmin && (
+            <div className="bg-gray-100 p-1 rounded-lg flex items-center">
+              <button 
+                onClick={() => setViewMode('club')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${viewMode === 'club' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Club View
+              </button>
+              <button 
+                onClick={() => setViewMode('student')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${viewMode === 'student' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Student View
+              </button>
+            </div>
+          )}
+          {viewMode === 'club' ? (
+            <Link to="/create-event" className="btn-primary flex items-center gap-2 whitespace-nowrap">
+              <PlusCircle size={18} /> Create Event
+            </Link>
+          ) : (
+            <Link to="/events" className="btn-primary flex items-center gap-2 whitespace-nowrap">
+              Participate <ArrowRight size={18} />
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Club Request Status Banner */}
@@ -379,7 +406,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 size={20} className="text-blue-600" />
             <h3 className="font-bold text-gray-900">
-               {isAdmin ? 'Event Registrations (Last 6 Months)' : 'Events Attended (Last 6 Months)'}
+               {viewMode === 'club' ? 'Event Registrations (Last 6 Months)' : 'Events Attended (Last 6 Months)'}
             </h3>
           </div>
           <div className="flex items-end gap-3 h-40">
@@ -416,8 +443,8 @@ export default function DashboardPage() {
 
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900">{isAdmin ? 'My Hosted Events' : 'My Registered Events'}</h3>
-          {isAdmin && (
+          <h3 className="font-bold text-gray-900">{viewMode === 'club' ? 'My Hosted Events' : 'My Registered Events'}</h3>
+          {viewMode === 'club' && (
             <Link to="/create-event" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
               <PlusCircle size={14} /> New
             </Link>
@@ -431,7 +458,7 @@ export default function DashboardPage() {
                 <th className="px-6 py-3 text-left">Date</th>
                 <th className="px-6 py-3 text-left">Registrations</th>
                 <th className="px-6 py-3 text-left">Status</th>
-                {isAdmin && <th className="px-6 py-3 text-left">Actions</th>}
+                {viewMode === 'club' && <th className="px-6 py-3 text-left">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -442,7 +469,7 @@ export default function DashboardPage() {
               ) : dashboardEvents.length === 0 ? (
                 <tr>
                    <td colSpan="5" className="text-center py-6 text-gray-400">
-                     {isAdmin ? "You haven't hosted any events yet." : "You haven't registered for any events yet."}
+                     {viewMode === 'club' ? "You haven't hosted any events yet." : "You haven't registered for any events yet."}
                    </td>
                 </tr>
               ) : dashboardEvents.map((event) => (
@@ -471,7 +498,7 @@ export default function DashboardPage() {
                       {getEventStatusLabel(event)}
                     </span>
                   </td>
-                  {isAdmin && (
+                  {viewMode === 'club' && (
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <button 

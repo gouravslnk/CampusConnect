@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Building, Users, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -75,11 +76,15 @@ export default function ClubsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredClubs.map(club => (
-            <div key={club.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all p-6 flex flex-col h-full">
+            <Link
+              key={club.id}
+              to={`/clubs/${club.id}`}
+              className="group bg-white rounded-xl shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all p-6 flex flex-col h-full"
+            >
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-xl font-bold text-gray-900">{club.name}</h3>
-                  <span className="bg-indigo-50 text-indigo-700 p-2 rounded-lg">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">{club.name}</h3>
+                  <span className="bg-indigo-50 text-indigo-700 p-2 rounded-lg transition-colors group-hover:bg-indigo-100">
                     <Users className="w-5 h-5" />
                   </span>
                 </div>
@@ -96,7 +101,7 @@ export default function ClubsPage() {
                   Managed by <strong>{club.profiles?.name || 'Unknown'}</strong>
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

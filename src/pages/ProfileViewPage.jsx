@@ -315,7 +315,7 @@ export default function ProfileViewPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.past_events.map((ev) => (
                   <div key={ev.id} className="border border-gray-200 bg-white rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
-                    <h4 className="font-bold text-gray-900 text-base">{ev.title}</h4>
+                    <h4 className="font-bold text-gray-900 text-base truncate" title={ev.title}>{ev.title}</h4>
                     {ev.role && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{ev.role}</span>}
                     {ev.date && (() => {
                       const raw = String(ev.date);
@@ -357,13 +357,14 @@ export default function ProfileViewPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.projects.map((project) => (
                   <div key={project.id} className="border border-gray-200 bg-white rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
-                    <h4 className="font-bold text-gray-900 text-base flex items-center gap-2">
+                    <h4 className="font-bold text-gray-900 text-base min-w-0">
                       {project.link ? (
-                        <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                          {project.title} <ExternalLink size={14} className="text-gray-400" />
+                        <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5 min-w-0" title={project.title}>
+                          <span className="truncate">{project.title}</span>
+                          <ExternalLink size={14} className="text-gray-400 flex-shrink-0" />
                         </a>
                       ) : (
-                        project.title
+                        <span className="truncate block" title={project.title}>{project.title}</span>
                       )}
                     </h4>
                     {project.tech && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{project.tech}</span>}

@@ -545,13 +545,16 @@ export default function ProfilePage() {
                     <button onClick={() => handleDeleteProject(project.id)} className="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Trash2 size={16} />
                     </button>
-                    <div className="flex items-start justify-between pr-6">
-                      <h4 className="font-bold text-gray-900 text-base flex-1">
+                    <div className="flex items-start justify-between pr-6 min-w-0">
+                      <h4 className="font-bold text-gray-900 text-base flex-1 min-w-0">
                         {project.link ? (
-                          <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5 w-fit">
-                            {project.title} <ExternalLink size={14} className="text-gray-400" />
+                          <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5 min-w-0" title={project.title}>
+                            <span className="truncate">{project.title}</span>
+                            <ExternalLink size={14} className="text-gray-400 flex-shrink-0" />
                           </a>
-                        ) : project.title}
+                        ) : (
+                          <span className="truncate block" title={project.title}>{project.title}</span>
+                        )}
                       </h4>
                     </div>
                     {project.tech && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{project.tech}</span>}
@@ -582,7 +585,7 @@ export default function ProfilePage() {
                     <button onClick={() => handleDeleteEvent(evt.id)} className="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Trash2 size={16} />
                     </button>
-                    <h4 className="font-bold text-gray-900 pr-6 text-base">{evt.title}</h4>
+                    <h4 className="font-bold text-gray-900 pr-6 text-base truncate" title={evt.title}>{evt.title}</h4>
                     <div className="flex items-center gap-2 mt-2">
                       {evt.role && <span className="inline-block bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{evt.role}</span>}
                       {evt.date && <span className="text-xs text-gray-500 font-medium">{evt.date}</span>}
