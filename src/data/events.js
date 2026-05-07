@@ -10,6 +10,7 @@ export const allowedClubs = [
 ];
 
 export const allowedVenues = [
+  'Online',
   'Auditoriam',
   'CL1',
   'CL2',
