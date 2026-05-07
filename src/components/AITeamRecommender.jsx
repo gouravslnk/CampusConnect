@@ -254,7 +254,6 @@ export default function AITeamRecommender({
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="font-bold text-slate-900">{student.name}</h4>
                       <span className="badge bg-green-100 text-green-700">Available</span>
-                      <span className="badge bg-slate-100 text-slate-700">{student.score}% fit</span>
                     </div>
                     <p className="mt-0.5 text-xs text-slate-500">
                       {[student.department, student.year].filter(Boolean).join(' - ') || 'Student'}
