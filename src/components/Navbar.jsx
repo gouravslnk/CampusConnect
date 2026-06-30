@@ -285,10 +285,10 @@ export default function Navbar({ user, onLogout }) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to={user ? (isSystemAdmin ? '/admin' : '/events') : '/'} className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#0f766e_0%,#2563eb_100%)] shadow-lg shadow-cyan-500/20">
-              <span className="text-white font-bold text-sm">CC</span>
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#0f766e_0%,#2563eb_100%)] shadow-lg shadow-cyan-500/20 shrink-0">
+              <span className="text-white font-bold text-xs sm:text-sm">CC</span>
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">CampusConnect</span>
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white truncate">CampusConnect</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -324,9 +324,9 @@ export default function Navbar({ user, onLogout }) {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className={`${user ? 'hidden md:flex' : 'flex'} rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800`}
+              className={`${user ? 'hidden md:flex' : 'flex'} rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1.5 sm:p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shrink-0`}
             >
-              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              {theme === 'dark' ? <Sun size={18} className="sm:w-5 sm:h-5" /> : <Moon size={18} className="sm:w-5 sm:h-5" />}
             </button>
 
             {user ? (
@@ -344,7 +344,7 @@ export default function Navbar({ user, onLogout }) {
                   </button>
 
                   {notifOpen && (
-                    <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                    <div className="fixed left-4 right-4 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-full z-50 sm:mt-2 sm:w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                       <div className="flex items-center justify-between px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <span className="font-bold text-sm text-slate-900 dark:text-white">Notifications</span>
                         <div className="flex items-center gap-3">
@@ -503,11 +503,11 @@ export default function Navbar({ user, onLogout }) {
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link to="/login" className="btn-secondary text-sm dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link to="/login" className="btn-secondary text-xs sm:text-sm px-3 py-1.5 sm:px-5 sm:py-2.5 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 whitespace-nowrap">
                   Log In
                 </Link>
-                <Link to="/register" className="btn-primary text-sm">
+                <Link to="/register" className="btn-primary text-xs sm:text-sm px-3 py-1.5 sm:px-5 sm:py-2.5 whitespace-nowrap">
                   Sign Up
                 </Link>
               </div>
