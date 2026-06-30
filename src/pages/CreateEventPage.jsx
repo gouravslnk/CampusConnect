@@ -191,8 +191,8 @@ export default function CreateEventPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event {isEditing ? 'Updated' : 'Created'}!</h2>
-          <p className="text-gray-500">Redirecting to dashboard...</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Event {isEditing ? 'Updated' : 'Created'}!</h2>
+          <p className="text-gray-500 dark:text-gray-400">Redirecting to dashboard...</p>
         </div>
       </div>
     );
@@ -200,13 +200,13 @@ export default function CreateEventPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-600 mb-6 text-sm">
+      <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 mb-6 text-sm">
         <ArrowLeft size={16} /> Back
       </button>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">{isEditing ? 'Edit Event' : 'Create New Event'}</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">{isEditing ? 'Edit Event' : 'Create New Event'}</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
           {isEditing ? 'Update event details on CampusConnect.' : 'Fill in the details to publish your event on CampusConnect.'}
         </p>
         {error && <p className="text-red-500 text-sm mt-3 p-3 bg-red-50 rounded-lg border border-red-100">{error}</p>}
@@ -220,15 +220,15 @@ export default function CreateEventPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="card p-6 space-y-5">
-          <h2 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Event Details</h2>
+          <h2 className="font-bold text-gray-900 dark:text-white text-lg border-b border-gray-100 dark:border-slate-800 pb-3">Event Details</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Club Name *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Club Name *</label>
             {fetchingClubs ? (
-              <div className="input-field animate-pulse bg-gray-50 flex items-center text-gray-400">Loading your club...</div>
+              <div className="input-field animate-pulse bg-gray-50 dark:bg-slate-800 flex items-center text-gray-400">Loading your club...</div>
             ) : userClubs.length > 0 ? (
               <select
-                className="input-field bg-gray-50 border-gray-200"
+                className="input-field bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700"
                 value={form.club}
                 onChange={(e) => setForm({ ...form, club: e.target.value })}
                 required
@@ -253,7 +253,7 @@ export default function CreateEventPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Title *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Event Title *</label>
             <input
               type="text"
               className="input-field"
@@ -266,7 +266,7 @@ export default function CreateEventPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Category *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Category *</label>
               <select
                 className="input-field"
                 value={form.category}
@@ -278,7 +278,7 @@ export default function CreateEventPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Max Seats *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Max Seats *</label>
               <div className="relative">
                 <Users size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -295,7 +295,7 @@ export default function CreateEventPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Type *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Event Type *</label>
               <select
                 className="input-field"
                 value={form.participation_mode}
@@ -307,7 +307,7 @@ export default function CreateEventPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">
                 {form.participation_mode === 'team' ? 'Max Team Members *' : 'Individual Participants *'}
               </label>
               <input
@@ -322,13 +322,13 @@ export default function CreateEventPage() {
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 -mt-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
             Team events will ask registrants for team name, captain contact, and member details during registration.
           </p>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Date *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Date *</label>
               <div className="relative">
                 <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -341,7 +341,7 @@ export default function CreateEventPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Time *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Time *</label>
               <input
                 type="time"
                 className="input-field"
@@ -353,7 +353,7 @@ export default function CreateEventPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Venue *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Venue *</label>
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <select
@@ -369,7 +369,7 @@ export default function CreateEventPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Description *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Description *</label>
             <textarea
               className="input-field min-h-[120px] resize-none"
               placeholder="Tell students what this event is about..."
@@ -381,10 +381,10 @@ export default function CreateEventPage() {
         </div>
 
         <div className="card p-6 space-y-5">
-          <h2 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Tags & Media</h2>
+          <h2 className="font-bold text-gray-900 dark:text-white text-lg border-b border-gray-100 dark:border-slate-800 pb-3">Tags & Media</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Tags</label>
             <div className="flex flex-wrap gap-2 mb-2">
               {form.tags.map((tag) => (
                 <span key={tag} className="badge bg-blue-100 text-blue-700 flex items-center gap-1 px-3 py-1 text-sm">
@@ -409,7 +409,7 @@ export default function CreateEventPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Banner</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Event Banner</label>
             {form.image ? (
               <div className="relative">
                 <img src={form.image} alt="Event banner preview" className="w-full h-48 object-cover rounded-xl" />
@@ -427,16 +427,16 @@ export default function CreateEventPage() {
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
                 {uploadingImage ? (
                   <>
                     <Loader size={28} className="text-blue-500 mb-2 animate-spin" />
-                    <p className="text-sm text-gray-500">Uploading...</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Uploading...</p>
                   </>
                 ) : (
                   <>
                     <Upload size={28} className="text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">Click to upload banner image</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Click to upload banner image</p>
                     <p className="text-xs text-gray-400 mt-0.5">PNG, JPG up to 5MB</p>
                   </>
                 )}
@@ -453,7 +453,7 @@ export default function CreateEventPage() {
         </div>
 
         <div className="flex gap-3">
-          <button type="button" onClick={() => navigate(-1)} className="btn-secondary flex-1">
+          <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary flex-1">
             Cancel
           </button>
           <button type="submit" disabled={submitting} className="btn-primary flex-1">

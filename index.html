@@ -5,6 +5,36 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CampusConnect</title>
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '0';
+        errorDiv.style.left = '0';
+        errorDiv.style.width = '100vw';
+        errorDiv.style.height = '100vh';
+        errorDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+        errorDiv.style.color = 'white';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.zIndex = '99999';
+        errorDiv.innerHTML = '<h2>Global Error Captured:</h2><pre>' + message + '\n' + (error ? error.stack : '') + '</pre>';
+        document.body.appendChild(errorDiv);
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '0';
+        errorDiv.style.left = '0';
+        errorDiv.style.width = '100vw';
+        errorDiv.style.height = '100vh';
+        errorDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+        errorDiv.style.color = 'white';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.zIndex = '99999';
+        errorDiv.innerHTML = '<h2>Unhandled Promise Rejection:</h2><pre>' + (event.reason && event.reason.stack ? event.reason.stack : event.reason) + '</pre>';
+        document.body.appendChild(errorDiv);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

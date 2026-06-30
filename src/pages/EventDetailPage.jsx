@@ -308,7 +308,7 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <div className="text-center py-32">
-        <h2 className="text-2xl font-bold text-gray-700">Event not found</h2>
+        <h2 className="text-2xl font-bold text-gray-700 dark:text-gray-200">Event not found</h2>
         <Link to="/events" className="btn-primary mt-6 inline-block">Back to Events</Link>
       </div>
     );
@@ -321,7 +321,7 @@ export default function EventDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-blue-600 mb-6 text-sm">
+      <button onClick={() => navigate('/events')} className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 mb-6 text-sm">
         <ArrowLeft size={16} /> Back to Events
       </button>
 
@@ -331,23 +331,23 @@ export default function EventDetailPage() {
             <img
               src={event.image}
               alt={event.title}
-              className="w-full h-64 object-cover rounded-2xl mb-6 bg-gray-100"
+              className="w-full h-64 object-cover rounded-2xl mb-6 bg-gray-100 dark:bg-slate-800"
             />
           ) : (
             <div className="w-full h-64 rounded-2xl mb-6 bg-gradient-to-tr from-blue-100 to-purple-100" />
           )}
 
           <div className="flex items-center gap-2 mb-2">
-            <span className="badge bg-blue-100 text-blue-700">{event.category}</span>
-            <span className="badge bg-slate-100 text-slate-700 capitalize">
+            <span className="badge bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{event.category}</span>
+            <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 capitalize">
               {isTeamEvent ? `Team event • max ${teamMemberLimit} members` : 'Solo event'}
             </span>
-            <span className={`badge ${isUnavailable ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            <span className={`badge ${isUnavailable ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'}`}>
               {event.status === 'cancelled' ? 'Cancelled' : isExpiredEvent(event) ? 'Expired' : isUnavailable ? 'Closed' : 'Available'}
             </span>
           </div>
 
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">{event.title}</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">{event.title}</h1>
           <p className="text-blue-600 font-semibold mb-6">by {event.club || 'Campus Connect'}</p>
 
           <div className="grid grid-cols-2 gap-4 mb-8">
@@ -357,18 +357,18 @@ export default function EventDetailPage() {
               { icon: <Users size={16} />, label: 'Organizer', value: event.organizer },
                 { icon: <Clock size={16} />, label: 'Registrations', value: `${event.registrations} / ${maxSeats}` },
             ].map((item) => (
-              <div key={item.label} className="flex items-start gap-3 bg-gray-50 rounded-xl p-4">
+              <div key={item.label} className="flex items-start gap-3 bg-gray-50 dark:bg-slate-800 rounded-xl p-4">
                 <span className="text-blue-600 mt-0.5">{item.icon}</span>
                 <div>
-                  <p className="text-xs text-gray-500">{item.label}</p>
-                  <p className="font-semibold text-sm text-gray-900">{item.value}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">{item.value}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 mb-3">About this Event</h2>
-          <p className="text-gray-600 leading-relaxed mb-6 whitespace-pre-wrap">{event.description}</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">About this Event</h2>
+          <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 whitespace-pre-wrap">{event.description}</p>
 
           <div className="flex flex-wrap gap-2 mb-6">
             {event.tags && event.tags.map((tag) => (
@@ -378,15 +378,15 @@ export default function EventDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="card p-6 sticky top-24">
-            <h3 className="font-bold text-gray-900 mb-4">Registration</h3>
+          <div className="card p-6">
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">Registration</h3>
 
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1.5">
-                <span className="text-gray-500 flex items-center gap-1"><Users size={14} /> {event.registrations} registered</span>
-                <span className="text-gray-500">{event.maxSeats} total</span>
+                <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1"><Users size={14} /> {event.registrations} registered</span>
+                <span className="text-gray-500 dark:text-gray-400">{event.maxSeats} total</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
+              <div className="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full ${isAtCapacity ? 'bg-red-500' : filled >= 70 ? 'bg-yellow-400' : 'bg-blue-500'}`}
                   style={{ width: `${Math.min(filled, 100)}%` }}
@@ -429,7 +429,7 @@ export default function EventDetailPage() {
                 className={`flex-1 flex items-center justify-center gap-1.5 border rounded-lg py-2 text-sm font-medium transition-colors ${
                   isBookmarked 
                     ? 'bg-blue-50 border-blue-300 text-blue-600' 
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    : 'border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800'
                 }`}
               >
                 <Bookmark size={15} fill={isBookmarked ? 'currentColor' : 'none'} /> 
@@ -437,7 +437,7 @@ export default function EventDetailPage() {
               </button>
               <button 
                 onClick={() => setShowShareModal(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 rounded-lg py-2 text-sm text-gray-600 hover:bg-gray-50 font-medium transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 dark:border-slate-700 rounded-lg py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 font-medium transition-colors"
               >
                 <Share2 size={15} /> Share
               </button>
@@ -448,11 +448,11 @@ export default function EventDetailPage() {
 
       {showRegistrationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl">
+            <div className="flex items-start justify-between border-b border-gray-100 dark:border-slate-800 px-6 py-4">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Complete your registration</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Complete your registration</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {isTeamEvent
                     ? `Fill in the team details for this event. Max ${teamMemberLimit} members per team.`
                     : 'Fill in your details to confirm your registration.'}
@@ -460,7 +460,7 @@ export default function EventDetailPage() {
               </div>
               <button
                 onClick={() => setShowRegistrationModal(false)}
-                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 hover:text-gray-600"
                 aria-label="Close registration form"
               >
                 <ArrowLeft size={18} className="rotate-45" />
@@ -478,7 +478,7 @@ export default function EventDetailPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700">Team Name *</label>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Team Name *</label>
                       <input
                         type="text"
                         className="input-field"
@@ -489,7 +489,7 @@ export default function EventDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700">Captain Contact *</label>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Captain Contact *</label>
                       <input
                         type="text"
                         className="input-field"
@@ -502,7 +502,7 @@ export default function EventDetailPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Number of team members *</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Number of team members *</label>
                     <input
                       type="number"
                       min="1"
@@ -511,13 +511,13 @@ export default function EventDetailPage() {
                       value={memberCount}
                       onChange={(e) => setMemberCount(Math.max(1, Math.min(teamMemberLimit, Number(e.target.value) || 1)))}
                     />
-                    <p className="mt-1 text-xs text-gray-500">This includes the captain. Maximum allowed is {teamMemberLimit}.</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">This includes the captain. Maximum allowed is {teamMemberLimit}.</p>
                   </div>
 
                   <div className="space-y-3">
                     {registrationForm.members.map((member, index) => (
-                      <div key={index} className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
-                        <p className="mb-3 text-sm font-semibold text-gray-900">
+                      <div key={index} className="rounded-2xl border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/70 p-4">
+                        <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
                           {index === 0 ? 'Captain' : `Member ${index + 1}`}
                         </p>
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -560,7 +560,7 @@ export default function EventDetailPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700">Full Name *</label>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Full Name *</label>
                       <input
                         type="text"
                         className="input-field"
@@ -570,7 +570,7 @@ export default function EventDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700">Enrollment No. *</label>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Enrollment No. *</label>
                       <input
                         type="text"
                         className="input-field"
@@ -580,7 +580,7 @@ export default function EventDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700">Year *</label>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Year *</label>
                       <input
                         type="text"
                         className="input-field"
@@ -590,7 +590,7 @@ export default function EventDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700">Batch *</label>
+                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-200">Batch *</label>
                       <input
                         type="text"
                         className="input-field"
@@ -603,7 +603,7 @@ export default function EventDetailPage() {
                 </div>
               )}
 
-              <div className="mt-6 flex gap-3 border-t border-gray-100 pt-5">
+              <div className="mt-6 flex gap-3 border-t border-gray-100 dark:border-slate-800 pt-5">
                 <button
                   type="button"
                   onClick={() => setShowRegistrationModal(false)}
@@ -626,12 +626,12 @@ export default function EventDetailPage() {
 
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <h3 className="text-lg font-bold text-gray-900">Share Event</h3>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 px-6 py-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Share Event</h3>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100"
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800"
               >
                 <ArrowLeft size={18} className="rotate-45" />
               </button>
@@ -640,56 +640,56 @@ export default function EventDetailPage() {
             <div className="p-6 space-y-3">
               <button
                 onClick={() => handleShareEvent('copy')}
-                className="w-full flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 border border-gray-100 dark:border-slate-800 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-left"
               >
                 <Copy size={18} className="text-blue-600 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">Copy Link</p>
-                  <p className="text-xs text-gray-500">Copy event link to clipboard</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">Copy Link</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Copy event link to clipboard</p>
                 </div>
               </button>
 
               <button
                 onClick={() => handleShareEvent('whatsapp')}
-                className="w-full flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 border border-gray-100 dark:border-slate-800 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-left"
               >
                 <MessageCircle size={18} className="text-green-600 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">WhatsApp</p>
-                  <p className="text-xs text-gray-500">Share via WhatsApp</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">WhatsApp</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Share via WhatsApp</p>
                 </div>
               </button>
 
               <button
                 onClick={() => handleShareEvent('twitter')}
-                className="w-full flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 border border-gray-100 dark:border-slate-800 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-left"
               >
                 <Twitter size={18} className="text-blue-400 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">Twitter</p>
-                  <p className="text-xs text-gray-500">Share on Twitter</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">Twitter</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Share on Twitter</p>
                 </div>
               </button>
 
               <button
                 onClick={() => handleShareEvent('linkedin')}
-                className="w-full flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 border border-gray-100 dark:border-slate-800 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-left"
               >
                 <Linkedin size={18} className="text-blue-700 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">LinkedIn</p>
-                  <p className="text-xs text-gray-500">Share on LinkedIn</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">LinkedIn</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Share on LinkedIn</p>
                 </div>
               </button>
 
               <button
                 onClick={() => handleShareEvent('email')}
-                className="w-full flex items-center gap-3 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 border border-gray-100 dark:border-slate-800 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors text-left"
               >
                 <Mail size={18} className="text-red-600 flex-shrink-0" />
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">Email</p>
-                  <p className="text-xs text-gray-500">Share via Email</p>
+                  <p className="font-semibold text-sm text-gray-900 dark:text-white">Email</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Share via Email</p>
                 </div>
               </button>
             </div>

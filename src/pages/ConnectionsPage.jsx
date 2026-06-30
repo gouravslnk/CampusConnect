@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Check, Clock3, MessageSquare, UserRoundCheck, UserRoundPlus, X } from 'lucide-react';
+import Pagination from '../components/Pagination';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchConnections } from '../store/slices/connectionsSlice';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -9,80 +12,18 @@ export default function ConnectionsPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { accepted, incomingPending, outgoingPending, loading } = useSelector((state) => state.connections);
 
-  const [loading, setLoading] = useState(true);
-  const [accepted, setAccepted] = useState([]);
-  const [incomingPending, setIncomingPending] = useState([]);
-  const [outgoingPending, setOutgoingPending] = useState([]);
-
-  const fetchConnections = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const { data: requests, error } = await supabase
-        .from('connection_requests')
-        .select('id, requester_id, recipient_id, status, created_at, updated_at')
-        .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-
-      const otherIds = [...new Set((requests || []).map((req) => (req.requester_id === user.id ? req.recipient_id : req.requester_id)))];
-
-      let profilesById = {};
-      if (otherIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, name, department, year, avatar, bio')
-          .in('id', otherIds);
-
-        if (profilesError) throw profilesError;
-
-        profilesById = (profiles || []).reduce((acc, profile) => {
-          acc[profile.id] = profile;
-          return acc;
-        }, {});
-      }
-
-      const acceptedRows = [];
-      const incomingRows = [];
-      const outgoingRows = [];
-
-      for (const req of requests || []) {
-        const otherUserId = req.requester_id === user.id ? req.recipient_id : req.requester_id;
-        const profile = profilesById[otherUserId];
-        if (!profile) continue;
-
-        const row = {
-          ...req,
-          otherUserId,
-          profile,
-        };
-
-        if (req.status === 'accepted') {
-          acceptedRows.push(row);
-        } else if (req.status === 'pending' && req.recipient_id === user.id) {
-          incomingRows.push(row);
-        } else if (req.status === 'pending' && req.requester_id === user.id) {
-          outgoingRows.push(row);
-        }
-      }
-
-      setAccepted(acceptedRows);
-      setIncomingPending(incomingRows);
-      setOutgoingPending(outgoingRows);
-    } catch (err) {
-      console.error('Error fetching connections:', err);
-      showToast(err?.message || 'Failed to load connections.', { type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Pagination State for Accepted Connections
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
-    fetchConnections();
-  }, [user]);
+    if (user) {
+      dispatch(fetchConnections(user.id));
+    }
+  }, [user, dispatch]);
 
   const updateRequestStatus = async (requestId, status) => {
     try {
@@ -99,7 +40,7 @@ export default function ConnectionsPage() {
         showToast('Connection request declined.', { type: 'info' });
       }
 
-      fetchConnections();
+      dispatch(fetchConnections(user.id));
     } catch (err) {
       console.error('Error updating request status:', err);
       showToast(err?.message || 'Failed to update request.', { type: 'error' });
@@ -118,7 +59,7 @@ export default function ConnectionsPage() {
       if (error) throw error;
 
       showToast('Connection request canceled.', { type: 'info' });
-      fetchConnections();
+      dispatch(fetchConnections(user.id));
     } catch (err) {
       console.error('Error canceling outgoing request:', err);
       showToast(err?.message || 'Failed to cancel request.', { type: 'error' });
@@ -139,7 +80,7 @@ export default function ConnectionsPage() {
       .join('') || 'U';
 
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-4 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-start gap-3">
           {profile.avatar ? (
             <img src={profile.avatar} alt={profile.name} className="h-12 w-12 rounded-full object-cover ring-2 ring-slate-100" />
@@ -150,9 +91,9 @@ export default function ConnectionsPage() {
           )}
 
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold text-slate-900">{profile.name}</h3>
-            <p className="text-xs text-slate-500">{profile.department || 'Department not set'}{profile.year ? ` • ${profile.year}` : ''}</p>
-            <p className="mt-1 line-clamp-2 text-xs text-slate-500">{profile.bio || 'No bio yet.'}</p>
+            <h3 className="truncate font-semibold text-slate-900 dark:text-white">{profile.name}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{profile.department || 'Department not set'}{profile.year ? ` • ${profile.year}` : ''}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{profile.bio || 'No bio yet.'}</p>
           </div>
         </div>
 
@@ -160,7 +101,7 @@ export default function ConnectionsPage() {
           {actions}
           <Link
             to={`/profile/${item.otherUserId}`}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+            className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:border-cyan-300 hover:bg-cyan-50 dark:hover:bg-slate-800 hover:text-cyan-700 dark:hover:text-cyan-400"
           >
             View Profile
           </Link>
@@ -179,26 +120,32 @@ export default function ConnectionsPage() {
     );
   }
 
+  const totalPages = Math.ceil(accepted.length / itemsPerPage);
+  const safePage = Math.max(1, Math.min(currentPage, Math.max(1, totalPages)));
+  
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const currentAccepted = accepted.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 rounded-3xl border border-slate-200 bg-[linear-gradient(140deg,#f0f9ff_0%,#f8fafc_55%,#eef2ff_100%)] p-6 shadow-sm">
+      <div className="mb-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-[linear-gradient(140deg,#f0f9ff_0%,#f8fafc_55%,#eef2ff_100%)] dark:bg-[linear-gradient(140deg,#1e293b_0%,#0f172a_55%,#020617_100%)] p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Your Connections</h1>
-            <p className="mt-2 text-sm text-slate-600">Manage accepted friends and pending requests in one place.</p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Your Connections</h1>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Manage accepted friends and pending requests in one place.</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-lg font-black text-slate-900">{accepted.length}</p>
-              <p className="text-[11px] uppercase tracking-wide text-slate-500">Connected</p>
+            <div className="rounded-xl bg-white dark:bg-slate-900 px-3 py-2 shadow-sm">
+              <p className="text-lg font-black text-slate-900 dark:text-white">{accepted.length}</p>
+              <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Connected</p>
             </div>
-            <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-lg font-black text-slate-900">{incomingPending.length}</p>
-              <p className="text-[11px] uppercase tracking-wide text-slate-500">Incoming</p>
+            <div className="rounded-xl bg-white dark:bg-slate-900 px-3 py-2 shadow-sm">
+              <p className="text-lg font-black text-slate-900 dark:text-white">{incomingPending.length}</p>
+              <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Incoming</p>
             </div>
-            <div className="rounded-xl bg-white px-3 py-2 shadow-sm">
-              <p className="text-lg font-black text-slate-900">{outgoingPending.length}</p>
-              <p className="text-[11px] uppercase tracking-wide text-slate-500">Sent</p>
+            <div className="rounded-xl bg-white dark:bg-slate-900 px-3 py-2 shadow-sm">
+              <p className="text-lg font-black text-slate-900 dark:text-white">{outgoingPending.length}</p>
+              <p className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Sent</p>
             </div>
           </div>
         </div>
@@ -207,11 +154,11 @@ export default function ConnectionsPage() {
       <section className="mb-8">
         <div className="mb-3 flex items-center gap-2">
           <UserRoundPlus size={16} className="text-amber-600" />
-          <h2 className="text-lg font-bold text-slate-900">Incoming Requests</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Incoming Requests</h2>
         </div>
 
         {incomingPending.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">No incoming connection requests.</div>
+          <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6 text-sm text-slate-500 dark:text-slate-400">No incoming connection requests.</div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {incomingPending.map((item) => (
@@ -245,11 +192,11 @@ export default function ConnectionsPage() {
       <section className="mb-8">
         <div className="mb-3 flex items-center gap-2">
           <Clock3 size={16} className="text-sky-600" />
-          <h2 className="text-lg font-bold text-slate-900">Sent Requests</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Sent Requests</h2>
         </div>
 
         {outgoingPending.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">No pending requests sent by you.</div>
+          <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6 text-sm text-slate-500 dark:text-slate-400">No pending requests sent by you.</div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {outgoingPending.map((item) => (
@@ -279,29 +226,43 @@ export default function ConnectionsPage() {
       <section>
         <div className="mb-3 flex items-center gap-2">
           <UserRoundCheck size={16} className="text-emerald-600" />
-          <h2 className="text-lg font-bold text-slate-900">Connected Friends</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Connected Friends</h2>
         </div>
 
         {accepted.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">You have no accepted connections yet.</div>
+          <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/50 p-6 text-sm text-slate-500 dark:text-slate-400">You have no accepted connections yet.</div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {accepted.map((item) => (
-              <ProfileCard
-                key={item.id}
-                item={item}
-                actions={
-                  <button
-                    type="button"
-                    onClick={() => openChat(item.otherUserId)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
-                  >
-                    <MessageSquare size={13} /> Message
-                  </button>
-                }
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {currentAccepted.map((item) => (
+                <ProfileCard
+                  key={item.id}
+                  item={item}
+                  actions={
+                    <button
+                      type="button"
+                      onClick={() => openChat(item.otherUserId)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-cyan-300 hover:bg-cyan-50 dark:hover:bg-slate-800 hover:text-cyan-700 dark:hover:text-cyan-400 transition-colors"
+                    >
+                      <MessageSquare size={13} /> Message
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+            
+            <Pagination
+              currentPage={safePage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={(num) => {
+                setItemsPerPage(num);
+                setCurrentPage(1);
+              }}
+              totalItems={accepted.length}
+            />
+          </>
         )}
       </section>
     </div>

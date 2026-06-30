@@ -12,21 +12,31 @@
       linear-gradient(180deg, #f8fbff 0%, #f8fafc 52%, #eff6ff 100%);
   }
 
+  :root.dark {
+    color: #f8fafc;
+    background:
+      radial-gradient(circle at top, rgba(14, 165, 233, 0.10), transparent 40%),
+      #020617; /* solid slate-950 */
+  }
+
   * {
     box-sizing: border-box;
   }
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 
   body {
     font-family: 'Manrope', sans-serif;
-    @apply min-h-screen bg-transparent text-slate-900 antialiased;
+    @apply min-h-screen bg-transparent text-slate-900 dark:text-slate-50 antialiased overflow-x-hidden w-full max-w-[100vw];
   }
 
   #root {
-    @apply min-h-screen;
+    @apply min-h-screen overflow-x-hidden flex flex-col w-full max-w-[100vw];
   }
 
   h1,
@@ -41,19 +51,19 @@
 
 @layer components {
   .btn-primary {
-    @apply rounded-xl bg-slate-900 px-5 py-2.5 font-semibold text-white shadow-lg shadow-slate-200 transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-600 hover:shadow-cyan-100;
+    @apply rounded-xl bg-slate-900 dark:bg-cyan-600 px-5 py-2.5 font-semibold text-white shadow-lg shadow-slate-200 dark:shadow-none transition duration-200 hover:-translate-y-0.5 hover:bg-cyan-600 dark:hover:bg-cyan-500 hover:shadow-cyan-100 dark:hover:shadow-cyan-900/50;
   }
 
   .btn-secondary {
-    @apply rounded-xl border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-cyan-300 hover:text-cyan-700;
+    @apply rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 font-semibold text-slate-700 dark:text-slate-200 transition duration-200 hover:-translate-y-0.5 hover:border-cyan-300 dark:hover:border-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-400;
   }
 
   .card {
-    @apply rounded-[1.5rem] border border-slate-200/80 bg-white/90 shadow-xl shadow-slate-200/50 backdrop-blur transition duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200/70;
+    @apply rounded-[1.5rem] border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 backdrop-blur transition duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200/70 dark:hover:shadow-slate-900/70;
   }
 
   .input-field {
-    @apply w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition duration-200 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100;
+    @apply w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-white shadow-sm outline-none transition duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-cyan-400 dark:focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:focus:ring-cyan-900/50;
   }
 
   .badge {

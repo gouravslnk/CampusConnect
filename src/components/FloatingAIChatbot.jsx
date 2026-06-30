@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, ChevronUp, Loader2, Maximize2, MessageSquare, Send, Sparkles, UserRound, X } from 'lucide-react';
+import { Bot, ChevronDown, Loader2, Maximize2, MessageSquare, Send, Sparkles, UserRound, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -107,10 +107,10 @@ export default function FloatingAIChatbot() {
   return (
     <div className="fixed bottom-5 right-5 z-[60]">
       {open && (
-        <div className="mb-3 w-[min(92vw,420px)] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-2xl shadow-slate-900/20">
+        <div className="mb-3 w-[min(92vw,420px)] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/20">
           <div className="flex items-center justify-between border-b border-slate-100 bg-[linear-gradient(135deg,#0f172a_0%,#0f766e_100%)] px-4 py-3 text-white">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-cyan-200">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 dark:bg-slate-900/10 text-cyan-200">
                 <Bot size={20} />
               </div>
               <div>
@@ -122,7 +122,7 @@ export default function FloatingAIChatbot() {
               <button
                 type="button"
                 onClick={() => navigate('/ai-assistant')}
-                className="rounded-xl bg-white/10 p-2 text-white transition hover:bg-white/20"
+                className="rounded-xl bg-white/10 dark:bg-slate-900/10 p-2 text-white transition hover:bg-white/20 dark:bg-slate-900/20"
                 aria-label="Open full assistant"
               >
                 <Maximize2 size={16} />
@@ -130,7 +130,7 @@ export default function FloatingAIChatbot() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-xl bg-white/10 p-2 text-white transition hover:bg-white/20"
+                className="rounded-xl bg-white/10 dark:bg-slate-900/10 p-2 text-white transition hover:bg-white/20 dark:bg-slate-900/20"
                 aria-label="Close chatbot"
               >
                 <X size={16} />
@@ -138,9 +138,9 @@ export default function FloatingAIChatbot() {
             </div>
           </div>
 
-          <div className="max-h-[58vh] overflow-y-auto bg-slate-50/70 px-4 py-4">
-            <div className="mb-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-3">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-cyan-700">
+          <div className="max-h-[58vh] overflow-y-auto bg-slate-50/70 dark:bg-slate-800/95 px-4 py-4">
+            <div className="mb-4 rounded-2xl border border-cyan-100 dark:border-cyan-900/50 bg-cyan-50 dark:bg-cyan-950/30 p-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-400">
                 <Sparkles size={12} /> Try asking
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -148,7 +148,7 @@ export default function FloatingAIChatbot() {
                   <button
                     key={prompt}
                     onClick={() => askAssistant(prompt)}
-                    className="rounded-full border border-cyan-100 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:border-cyan-200 hover:bg-cyan-50"
+                    className="rounded-full border border-cyan-100 dark:border-cyan-800 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-cyan-800 dark:text-cyan-300 transition hover:border-cyan-200 dark:hover:border-cyan-700 hover:bg-cyan-50 dark:hover:bg-slate-700"
                   >
                     {prompt}
                   </button>
@@ -163,14 +163,14 @@ export default function FloatingAIChatbot() {
                   <div key={message.id} className={`flex ${fromUser ? 'justify-end' : 'justify-start'}`}>
                     <div className={`flex max-w-[88%] gap-2 ${fromUser ? 'flex-row-reverse' : ''}`}>
                       <div className={`mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
-                        fromUser ? 'bg-slate-900 text-white' : 'bg-cyan-100 text-cyan-700'
+                        fromUser ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300'
                       }`}>
                         {fromUser ? <UserRound size={14} /> : <Bot size={14} />}
                       </div>
                       <div className={`rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm ${
                         fromUser
-                          ? 'rounded-br-md bg-slate-900 text-white'
-                          : 'rounded-bl-md border border-slate-100 bg-white text-slate-700'
+                          ? 'rounded-br-md bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                          : 'rounded-bl-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200'
                       }`}>
                         {formatMessage(message.text)}
                       </div>
@@ -182,10 +182,10 @@ export default function FloatingAIChatbot() {
               {thinking && (
                 <div className="flex justify-start">
                   <div className="flex gap-2">
-                    <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-cyan-100 text-cyan-700">
+                    <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300">
                       <Bot size={14} />
                     </div>
-                    <div className="rounded-3xl rounded-bl-md border border-slate-100 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+                    <div className="rounded-3xl rounded-bl-md border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-500 dark:text-slate-400 shadow-sm">
                       <span className="inline-flex items-center gap-2">
                         <Loader2 className="animate-spin" size={14} /> Thinking...
                       </span>
@@ -197,7 +197,7 @@ export default function FloatingAIChatbot() {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-white p-3">
+          <div className="border-t border-slate-100 bg-white dark:bg-slate-900 p-3">
             <div className="flex items-center gap-2">
               <input
                 className="input-field flex-1"
@@ -212,7 +212,7 @@ export default function FloatingAIChatbot() {
               <button
                 onClick={() => askAssistant(input)}
                 disabled={loading || thinking || !input.trim()}
-                className="rounded-2xl bg-slate-900 p-3 text-white shadow-lg shadow-slate-200 transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl bg-slate-900 dark:bg-slate-100 p-3 text-white dark:text-slate-900 shadow-lg shadow-slate-200 dark:shadow-none transition hover:bg-cyan-700 dark:hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Send message"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
@@ -228,7 +228,7 @@ export default function FloatingAIChatbot() {
         className="flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f766e_0%,#2563eb_100%)] text-white shadow-2xl shadow-cyan-500/25 transition hover:scale-105"
         aria-label="Open Campus AI chatbot"
       >
-        {open ? <ChevronUp size={24} /> : <MessageSquare size={24} />}
+        {open ? <ChevronDown size={24} /> : <MessageSquare size={24} />}
       </button>
     </div>
   );

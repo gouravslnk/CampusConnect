@@ -38,17 +38,17 @@ export default function ForgotPasswordPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8">
             <div className="text-center">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="text-green-600" size={24} />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h1>
-              <p className="text-gray-600 mb-6">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Check your email</h1>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 We've sent a password reset link to <strong>{email}</strong>. 
                 Click the link to reset your password.
               </p>
-              <p className="text-sm text-gray-500 mb-8">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
                 The link expires in 24 hours. If you don't see the email, check your spam folder.
               </p>
             </div>
@@ -69,13 +69,13 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8">
           <div className="text-center mb-8">
             <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <span className="text-white font-bold text-lg">CC</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Reset your password</h1>
-            <p className="text-gray-500 text-sm mt-1">Enter your email address to receive a reset link</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reset your password</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Enter your email address to receive a reset link</p>
           </div>
 
           {error && (
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             <Link to="/login" className="text-blue-600 font-semibold hover:underline flex items-center justify-center gap-1">
               <ArrowLeft size={14} />
               Back to Login

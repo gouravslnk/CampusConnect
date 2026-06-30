@@ -111,17 +111,17 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8">
 
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <span className="text-white font-bold text-lg">CC</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {step === 1 ? 'Create your account' : 'Club Details'}
             </h1>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               {step === 1
                 ? 'Join your campus community'
                 : 'Tell us about the club you want to create'}
@@ -131,8 +131,8 @@ export default function RegisterPage() {
           {/* Step indicator for club admin */}
           {form.role === 'club_admin' && (
             <div className="flex items-center gap-2 mb-6">
-              <div className={`flex-1 h-1.5 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-              <div className={`flex-1 h-1.5 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
+              <div className={`flex-1 h-1.5 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`} />
+              <div className={`flex-1 h-1.5 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`} />
             </div>
           )}
 
@@ -148,7 +148,7 @@ export default function RegisterPage() {
             <form onSubmit={handleStep1Continue} className="space-y-4">
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Full Name</label>
                 <div className="relative">
                   <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -162,7 +162,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">College Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">College Email</label>
                 <div className="relative">
                   <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -177,7 +177,7 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Enrollment No. *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Enrollment No. *</label>
                   <input
                     type="text"
                     className="input-field"
@@ -188,7 +188,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Batch</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Batch</label>
                   <input
                     type="text"
                     className="input-field"
@@ -201,7 +201,7 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Department</label>
                   <div className="relative">
                     <GraduationCap size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <select
@@ -215,7 +215,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Year</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Year</label>
                   <select
                     className="input-field"
                     value={form.year}
@@ -229,13 +229,13 @@ export default function RegisterPage() {
 
               {/* Role selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">I am a...</label>
                 <div className="grid grid-cols-2 gap-3">
                   {['student', 'club_admin'].map((r) => (
                     <label
                       key={r}
                       className={`flex items-center gap-2 border rounded-lg p-3 cursor-pointer transition-colors ${
-                        form.role === r ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        form.role === r ? 'border-blue-500 bg-blue-50' : 'border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:border-slate-600'
                       }`}
                     >
                       <input
@@ -260,7 +260,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Password</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -273,7 +273,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPass(!showPass)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-200"
                   >
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -296,7 +296,7 @@ export default function RegisterPage() {
             <form onSubmit={handleFinalSubmit} className="space-y-4">
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Club Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Club Name</label>
                 <div className="relative">
                   <Building size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -311,7 +311,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">College / Department</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">College / Department</label>
                 <div className="relative">
                   <GraduationCap size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -326,7 +326,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Club Description</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Club Description</label>
                 <div className="relative">
                   <FileText size={16} className="absolute left-3 top-3 text-gray-400" />
                   <textarea
@@ -348,7 +348,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => { setStep(1); setError(''); }}
-                  className="flex items-center gap-1.5 px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors"
+                  className="flex items-center gap-1.5 px-4 py-2.5 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800 font-medium text-sm transition-colors"
                 >
                   <ArrowLeft size={15} /> Back
                 </button>
@@ -364,7 +364,7 @@ export default function RegisterPage() {
             </form>
           )}
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
             Already have an account?{' '}
             <Link to="/login" className="text-blue-600 font-semibold hover:underline">
               Sign in

@@ -93,7 +93,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-50 selection:bg-blue-100 dark:selection:bg-blue-900 selection:text-blue-900 dark:selection:text-blue-100 overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-white dark:text-slate-50 selection:bg-blue-100 dark:selection:bg-blue-900 selection:text-blue-900 dark:selection:text-blue-100 overflow-hidden transition-colors duration-300">
       {/* Custom Styles for Animations */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes float {
@@ -140,7 +140,7 @@ export default function LandingPage() {
             </h1>
             
             {/* Subheadline */}
-            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed transition-colors duration-300">
+            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed transition-colors duration-300">
               Discover campus events, find teammates with the right skills, and build amazing projects. Stop relying on scattered group chats.
             </p>
             
@@ -178,7 +178,7 @@ export default function LandingPage() {
               </div>
               <div className="flex gap-4 mb-6">
                 <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors duration-300">
-                  <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-blue-500 dark:text-blue-400">
+                  <div className="w-12 h-12 bg-white dark:bg-slate-900 dark:bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-blue-500 dark:text-blue-400">
                     <Code size={24} />
                   </div>
                   <div>
@@ -187,7 +187,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors duration-300">
-                  <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-cyan-500 dark:text-cyan-400">
+                  <div className="w-12 h-12 bg-white dark:bg-slate-900 dark:bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-cyan-500 dark:text-cyan-400">
                     <Rocket size={24} />
                   </div>
                   <div>
@@ -255,7 +255,7 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 transition-colors duration-300">
               Everything you need, in one place
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 transition-colors duration-300">
+            <p className="text-lg text-slate-600 dark:text-slate-300 dark:text-slate-400 transition-colors duration-300">
               A comprehensive suite of tools built specifically for students and clubs to thrive.
             </p>
           </div>
@@ -267,7 +267,7 @@ export default function LandingPage() {
                   {f.icon}
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 transition-colors duration-300">{f.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-lg transition-colors duration-300">{f.desc}</p>
+                <p className="text-slate-600 dark:text-slate-300 dark:text-slate-400 leading-relaxed text-lg transition-colors duration-300">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -279,7 +279,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 transition-colors duration-300">How it works</h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto transition-colors duration-300">Get started in minutes and unlock the full potential of your campus network.</p>
+            <p className="text-lg text-slate-600 dark:text-slate-300 dark:text-slate-400 max-w-2xl mx-auto transition-colors duration-300">Get started in minutes and unlock the full potential of your campus network.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
@@ -296,35 +296,35 @@ export default function LandingPage() {
                   <span className="text-3xl font-black text-blue-600 dark:text-blue-400">{item.step}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 transition-colors duration-300">{item.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs transition-colors duration-300">{item.desc}</p>
+                <p className="text-slate-600 dark:text-slate-300 dark:text-slate-400 leading-relaxed max-w-xs transition-colors duration-300">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gray-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white text-center mb-16 transition-colors duration-300">
-            Loved by students
-          </h2>
+          <h2 className="text-3xl font-extrabold text-center text-gray-900 dark:text-white mb-12">Loved by students</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((t, idx) => (
-              <div key={idx} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300 relative">
-                <div className="flex mb-4 gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={18} className="fill-yellow-400 text-yellow-400" />
-                  ))}
+            {[
+              { name: "Riya Verma", role: "3rd Year, CSE", initials: "RV", quote: "\"CampusConnect helped me find my hackathon team in minutes. We ended up winning 2nd place!\"" },
+              { name: "Aditya Rao", role: "President, Coding Club", initials: "AR", quote: "\"Managing events used to be a hassle. The dashboard and analytics make it so much easier now.\"" },
+              { name: "Pooja Desai", role: "2nd Year, IT", initials: "PD", quote: "\"I never miss an event on campus anymore. The filters help me find exactly what I'm looking for.\"" }
+            ].map((testimonial, index) => (
+              <div key={index} className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-900">
+                <div className="flex text-yellow-400 mb-4">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
                 </div>
-                <p className="text-slate-700 dark:text-slate-300 text-lg leading-relaxed mb-8">"{t.text}"</p>
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 transition-colors duration-300">
-                    {getInitials(t.name)}
+                <p className="text-gray-600 dark:text-gray-300 mb-6 font-medium leading-relaxed">{testimonial.quote}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                    {testimonial.initials}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-900 dark:text-white transition-colors duration-300">{t.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors duration-300">{t.role}</p>
+                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">{testimonial.name}</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
@@ -333,8 +333,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="py-24 bg-white dark:bg-slate-900 transition-colors duration-300">
+      {/* CTA Section */}
+      <section className="py-20 bg-white dark:bg-slate-900 transition-colors duration-300">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-slate-900 dark:bg-blue-950 rounded-[3rem] p-10 md:p-16 text-center relative overflow-hidden border border-transparent dark:border-blue-900/50 transition-colors duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-cyan-500/20 dark:from-blue-600/40 dark:to-cyan-500/40" />
@@ -344,7 +344,7 @@ export default function LandingPage() {
               <p className="text-lg text-slate-300 dark:text-blue-100/80 mb-10 max-w-2xl mx-auto">Don't miss out on the next big hackathon or the perfect teammate. Get started today, it's free.</p>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-2xl bg-white dark:bg-blue-500 px-10 py-5 font-bold text-slate-900 dark:text-white text-lg shadow-xl hover:-translate-y-1 hover:shadow-2xl dark:hover:bg-blue-400 transition-all active:scale-95"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-900 dark:bg-blue-500 px-10 py-5 font-bold text-slate-900 dark:text-white text-lg shadow-xl hover:-translate-y-1 hover:shadow-2xl dark:hover:bg-blue-400 transition-all active:scale-95"
               >
                 Create Free Account <ArrowRight size={20} />
               </Link>

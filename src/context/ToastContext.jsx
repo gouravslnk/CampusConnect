@@ -59,7 +59,7 @@ export function ToastProvider({ children }) {
             <button
               type="button"
               onClick={() => removeToast(toast.id)}
-              className="rounded-md p-1 text-slate-500 transition-colors hover:bg-white/50 hover:text-slate-800"
+              className="rounded-md p-1 text-slate-500 dark:text-slate-400 transition-colors hover:bg-white/50 dark:bg-slate-900/50 hover:text-slate-800 dark:text-slate-100"
               aria-label="Dismiss notification"
             >
               <X size={14} />

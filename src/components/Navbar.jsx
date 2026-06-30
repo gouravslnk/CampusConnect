@@ -1,27 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Bell, MessageSquare, User, LogOut, ChevronDown, Check, Trash2 } from 'lucide-react';
+import { Menu, X, Bell, MessageSquare, User, LogOut, ChevronDown, Check, Trash2, Sun, Moon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 
 const navLinks = [
   { to: '/events', label: 'Events' },
   { to: '/clubs', label: 'Clubs' },
   { to: '/developers', label: 'Developers' },
   { to: '/connections', label: 'Connections' },
-  { to: '/ai-teams', label: 'Team Builder' },
   { to: '/chat', label: 'Messages' },
   { to: '/admin', label: 'System Admin', requiresSystemAdmin: true },
 ];
 
 export default function Navbar({ user, onLogout }) {
   const { showToast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropOpen, setDropOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const notifRef = useRef(null);
+  const dropRef = useRef(null);
   
   const location = useLocation();
   const userInitials = (user?.name || 'User')
@@ -33,13 +35,24 @@ export default function Navbar({ user, onLogout }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or ESC
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) setNotifOpen(false);
+      if (dropRef.current && !dropRef.current.contains(event.target)) setDropOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setNotifOpen(false);
+        setDropOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -263,7 +276,7 @@ export default function Navbar({ user, onLogout }) {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(link.to)
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   {link.label}
@@ -274,14 +287,22 @@ export default function Navbar({ user, onLogout }) {
           )}
 
           {/* Right side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 md:gap-3">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`${user ? 'hidden md:flex' : 'flex'} rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800`}
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
             {user ? (
               <>
                 {/* Notifications */}
                 <div className="relative" ref={notifRef}>
                   <button 
                     onClick={() => { setNotifOpen(!notifOpen); setDropOpen(false); }}
-                    className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     <Bell size={20} />
                     {unreadCount > 0 && (
@@ -290,7 +311,7 @@ export default function Navbar({ user, onLogout }) {
                   </button>
 
                   {notifOpen && (
-                    <div className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                       <div className="flex items-center justify-between px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <span className="font-bold text-sm text-slate-900 dark:text-white">Notifications</span>
                         <div className="flex items-center gap-3">
@@ -299,7 +320,7 @@ export default function Navbar({ user, onLogout }) {
                               <Check size={12} /> Mark read
                             </button>
                           )}
-                          <button onClick={() => setShowClearConfirm(true)} className="text-xs text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 flex items-center gap-1">
+                          <button onClick={() => setShowClearConfirm(true)} className="text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 flex items-center gap-1">
                             <Trash2 size={12} /> Clear all
                           </button>
                         </div>
@@ -319,8 +340,8 @@ export default function Navbar({ user, onLogout }) {
                               >
                                 <div className="flex justify-between items-start gap-2 mb-2">
                                   <div>
-                                    <p className={`text-sm ${!notif.is_read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>{notif.title}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
+                                    <p className={`text-sm ${!notif.is_read ? 'font-semibold text-gray-900 dark:text-white' : 'font-medium text-gray-700 dark:text-gray-200'}`}>{notif.title}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{notif.message}</p>
                                   </div>
                                   {!notif.is_read && <span className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0" />}
                                 </div>
@@ -399,7 +420,7 @@ export default function Navbar({ user, onLogout }) {
                 </div>
 
                 {/* Avatar dropdown */}
-                <div className="relative">
+                <div className="relative" ref={dropRef}>
                   <button
                     onClick={() => { setDropOpen(!dropOpen); setNotifOpen(false); }}
                     className="flex items-center gap-2 rounded-xl border border-transparent p-1.5 transition-colors hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -415,25 +436,25 @@ export default function Navbar({ user, onLogout }) {
                         {userInitials}
                       </div>
                     )}
-                    <span className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <span className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-200 dark:text-slate-300">
                       {user.name}
                     </span>
-                    <ChevronDown size={16} className="text-slate-400 dark:text-slate-500" />
+                    <ChevronDown size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-400" />
                   </button>
 
                   {dropOpen && (
-                    <div className="absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                       <Link
                         to="/profile"
                         onClick={() => setDropOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                         <User size={16} /> My Profile
                       </Link>
                       <Link
                         to={isSystemAdmin ? '/admin' : '/dashboard'}
                         onClick={() => setDropOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       >
                         <MessageSquare size={16} /> {isSystemAdmin ? 'Admin Dashboard' : 'Dashboard'}
                       </Link>
@@ -462,7 +483,7 @@ export default function Navbar({ user, onLogout }) {
             {/* Mobile hamburger */}
             {user && (
               <button
-                className="md:hidden rounded-xl p-2 text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                className="md:hidden rounded-xl p-2 text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:text-white dark:hover:text-white"
                 onClick={() => setMenuOpen(!menuOpen)}
               >
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -473,7 +494,7 @@ export default function Navbar({ user, onLogout }) {
 
         {/* Mobile Menu */}
         {user && menuOpen && (
-          <div className="space-y-1 border-t border-slate-100 py-3 md:hidden">
+          <div className="space-y-1 border-t border-slate-100 dark:border-slate-800 py-3 md:hidden">
             {visibleNavLinks.map((link) => {
               if (link.requiresAdmin && user?.role !== 'club_admin') return null;
               if (link.requiresSystemAdmin && user?.role !== 'admin') return null;
@@ -483,13 +504,27 @@ export default function Navbar({ user, onLogout }) {
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
                 className={`block px-4 py-2 rounded-lg text-sm font-medium ${
-                  isActive(link.to) ? 'bg-slate-100 text-slate-900' : 'text-slate-600'
+                  isActive(link.to) ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 {link.label}
               </Link>
               );
             })}
+
+            <div className="mx-4 my-2 h-px bg-slate-100 dark:border-slate-800 dark:bg-slate-800"></div>
+            
+            <div className="px-4 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+              </span>
+              <button
+                onClick={toggleTheme}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+            </div>
           </div>
         )}
       </div>

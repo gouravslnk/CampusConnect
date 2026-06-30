@@ -315,25 +315,25 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
             {viewMode === 'club' ? 'Club Dashboard' : 'Student Dashboard'}
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
             {viewMode === 'club' ? 'Manage your events and track performance.' : 'Track your active event registrations and stats.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           {isAdmin && (
-            <div className="bg-gray-100 p-1 rounded-lg flex items-center">
+            <div className="bg-gray-100 dark:bg-slate-800 p-1 rounded-lg flex items-center">
               <button 
                 onClick={() => setViewMode('club')}
-                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${viewMode === 'club' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${viewMode === 'club' ? 'bg-white dark:bg-slate-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-200'}`}
               >
                 Club View
               </button>
               <button 
                 onClick={() => setViewMode('student')}
-                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${viewMode === 'student' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${viewMode === 'student' ? 'bg-white dark:bg-slate-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-200'}`}
               >
                 Student View
               </button>
@@ -394,8 +394,8 @@ export default function DashboardPage() {
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
               {stat.icon}
             </div>
-            <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
-            <p className="text-sm text-gray-500 mt-0.5">{stat.label}</p>
+            <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{stat.value}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{stat.label}</p>
             <p className="text-xs text-green-600 font-medium mt-1">{stat.change}</p>
           </div>
         ))}
@@ -405,14 +405,14 @@ export default function DashboardPage() {
         <div className="card p-6 lg:col-span-2">
           <div className="flex items-center gap-2 mb-6">
             <BarChart3 size={20} className="text-blue-600" />
-            <h3 className="font-bold text-gray-900">
+            <h3 className="font-bold text-gray-900 dark:text-white">
                {viewMode === 'club' ? 'Event Registrations (Last 6 Months)' : 'Events Attended (Last 6 Months)'}
             </h3>
           </div>
           <div className="flex items-end gap-3 h-40">
             {chartData.map((d) => (
               <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-xs font-semibold text-gray-700">{d.value}</span>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{d.value}</span>
                 <div
                   className="w-full bg-blue-600 rounded-t-md hover:bg-blue-700 transition-colors cursor-pointer"
                   style={{ height: `${(d.value / maxVal) * 100}%`, minHeight: '8px' }}
@@ -424,15 +424,15 @@ export default function DashboardPage() {
         </div>
 
         <div className="card p-6">
-          <h3 className="font-bold text-gray-900 mb-5">Events by Category</h3>
+          <h3 className="font-bold text-gray-900 dark:text-white mb-5">Events by Category</h3>
           <div className="space-y-3">
             {categoryData.map((item) => (
               <div key={item.cat}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-700">{item.cat}</span>
-                  <span className="font-semibold text-gray-900">{item.count}</span>
+                  <span className="text-gray-700 dark:text-gray-200">{item.cat}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{item.count}</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <div className="w-full bg-gray-100 dark:bg-slate-800 rounded-full h-1.5">
                   <div className={`h-1.5 rounded-full ${item.color}`} style={{ width: `${item.pct}%` }} />
                 </div>
               </div>
@@ -442,8 +442,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-900">{viewMode === 'club' ? 'My Hosted Events' : 'My Registered Events'}</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
+          <h3 className="font-bold text-gray-900 dark:text-white">{viewMode === 'club' ? 'My Hosted Events' : 'My Registered Events'}</h3>
           {viewMode === 'club' && (
             <Link to="/create-event" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
               <PlusCircle size={14} /> New
@@ -452,7 +452,7 @@ export default function DashboardPage() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+            <thead className="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">
               <tr>
                 <th className="px-6 py-3 text-left">Event</th>
                 <th className="px-6 py-3 text-left">Date</th>
@@ -473,20 +473,20 @@ export default function DashboardPage() {
                    </td>
                 </tr>
               ) : dashboardEvents.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-50">
+                <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{event.title}</div>
+                    <div className="font-medium text-gray-900 dark:text-white">{event.title}</div>
                     <div className="text-xs text-gray-400">{event.category}</div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
                     {new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{event.registrations}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{event.registrations}</span>
                       <span className="text-gray-400">/ {event.maxSeats}</span>
                     </div>
-                    <div className="w-24 bg-gray-100 rounded-full h-1 mt-1">
+                    <div className="w-24 bg-gray-100 dark:bg-slate-800 rounded-full h-1 mt-1">
                       <div
                         className="h-1 rounded-full bg-blue-500"
                         style={{ width: `${Math.min((event.registrations / event.maxSeats) * 100, 100)}%` }}
@@ -546,8 +546,8 @@ export default function DashboardPage() {
             <Building size={22} />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Campus Clubs</h3>
-            <p className="text-sm text-gray-500">Browse all active clubs on your campus.</p>
+            <h3 className="font-semibold text-gray-900 dark:text-white">Campus Clubs</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Browse all active clubs on your campus.</p>
           </div>
         </div>
         <Link
@@ -561,25 +561,25 @@ export default function DashboardPage() {
       {/* Participants Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gray-50 dark:bg-slate-800/50">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg">Manage Participants</h3>
-                <p className="text-sm text-gray-500">{selectedEvent.title} • {participants.length} / {selectedEvent.maxSeats} Registered</p>
+                <h3 className="font-bold text-gray-900 dark:text-white text-lg">Manage Participants</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedEvent.title} • {participants.length} / {selectedEvent.maxSeats} Registered</p>
                 <p className="text-xs text-gray-400 mt-1 capitalize">
                   {selectedEvent.participation_mode === 'team'
                     ? `Team event • max ${selectedEvent.max_team_members || 1} members per registration`
                     : 'Solo event'}
                 </p>
               </div>
-              <button onClick={() => setSelectedEvent(null)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+              <button onClick={() => setSelectedEvent(null)} className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 dark:bg-slate-800 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
             
             <div className="p-6 flex-1 overflow-y-auto">
               <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Add Participant</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Add Participant</label>
                 <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
@@ -596,12 +596,12 @@ export default function DashboardPage() {
                 </div>
                 
                 {searchResults.length > 0 && (
-                  <div className="mt-2 border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-50">
+                  <div className="mt-2 border border-gray-100 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-50">
                     {searchResults.map(u => (
-                      <div key={u.id} className="p-3 flex items-center justify-between hover:bg-gray-50">
+                      <div key={u.id} className="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-800 dark:bg-slate-800">
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{u.name}</p>
-                          <p className="text-xs text-gray-500">{u.department || 'Student'}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{u.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{u.department || 'Student'}</p>
                         </div>
                         <button onClick={() => handleAddParticipant(u)} className="btn-primary py-1.5 px-3 text-xs flex items-center gap-1">
                           <UserPlus size={14} /> Add
@@ -613,14 +613,14 @@ export default function DashboardPage() {
               </div>
               
               <div>
-                <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                  <label className="block text-sm font-semibold text-gray-700">Registered Students</label>
+                <div className="flex items-center justify-between mb-3 border-b border-gray-100 dark:border-slate-800 pb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Registered Students</label>
                   
                   <div className="flex items-center gap-2">
                     <select
                       value={filterBatch}
                       onChange={(e) => setFilterBatch(e.target.value)}
-                      className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-600 outline-none"
+                      className="text-xs border border-gray-200 dark:border-slate-700 rounded-md px-2 py-1 bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 outline-none"
                     >
                       <option value="">All Years</option>
                       {Array.from(new Set(participants.map(p => p.profiles?.year).filter(Boolean))).map(y => (
@@ -631,7 +631,7 @@ export default function DashboardPage() {
                     <select 
                       value={sortConfig} 
                       onChange={(e) => setSortConfig(e.target.value)}
-                      className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-600 outline-none"
+                      className="text-xs border border-gray-200 dark:border-slate-700 rounded-md px-2 py-1 bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 outline-none"
                     >
                       <option value="name_asc">Name (A-Z)</option>
                       <option value="name_desc">Name (Z-A)</option>
@@ -644,12 +644,12 @@ export default function DashboardPage() {
                 {loadingParticipants ? (
                   <p className="text-center text-gray-400 py-4 text-sm">Loading participants...</p>
                 ) : visibleParticipants.length === 0 ? (
-                  <p className="text-center text-gray-400 py-4 text-sm bg-gray-50 rounded-xl">No participants registered yet.</p>
+                  <p className="text-center text-gray-400 py-4 text-sm bg-gray-50 dark:bg-slate-800 rounded-xl">No participants registered yet.</p>
                 ) : (
                   <div className="space-y-5">
                     {teamRegistrations.length > 0 && (
                       <div>
-                        <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Team Registrations</h4>
+                        <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Team Registrations</h4>
                         <div className="space-y-2">
                           {teamRegistrations.map((registration, index) => {
                             const details = registration.registration_data || {};
@@ -657,11 +657,11 @@ export default function DashboardPage() {
                             const captainName = members[0]?.name || registration.profiles?.name || 'Unknown';
                             const captainContact = details.captain_contact || members[0]?.enrollment_no || '';
                             return (
-                              <div key={registration.id} className="rounded-xl border border-gray-100 bg-white p-4">
+                              <div key={registration.id} className="rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                                 <div className="flex items-start justify-between gap-4">
                                   <div>
-                                    <p className="text-sm font-semibold text-gray-900">{details.team_name || `Team ${index + 1}`}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{details.team_name || `Team ${index + 1}`}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                       Captain: {captainName}
                                       {captainContact ? ` • ${captainContact}` : ''}
                                     </p>
@@ -676,7 +676,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="mt-3 flex flex-wrap gap-2">
                                   {members.map((member, memberIndex) => (
-                                    <span key={`${registration.id}-${memberIndex}`} className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">
+                                    <span key={`${registration.id}-${memberIndex}`} className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700 dark:text-slate-200">
                                       {member.name || 'Member'}
                                       {member.enrollment_no ? ` • ${member.enrollment_no}` : ''}
                                       {member.year ? ` • ${member.year}` : ''}
@@ -692,22 +692,22 @@ export default function DashboardPage() {
 
                     {soloRegistrations.length > 0 && (
                       <div>
-                        <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Solo Registrations</h4>
+                        <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Solo Registrations</h4>
                         <div className="space-y-2">
                           {soloRegistrations.map((registration) => (
-                            <div key={registration.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-3 transition-colors hover:border-gray-200">
+                            <div key={registration.id} className="flex items-center justify-between rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 transition-colors hover:border-gray-200">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
                                   {registration.profiles?.name?.charAt(0) || 'U'}
                                 </div>
                                 <div>
-                                  <p className="text-sm font-semibold text-gray-900">
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
                                     {registration.profiles?.name || 'Unknown User'}
                                     {registration.profiles?.enrollment_no && <span className="text-gray-400 font-normal ml-2">({registration.profiles.enrollment_no})</span>}
                                   </p>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <p className="text-xs text-gray-500 font-medium">{registration.profiles?.department || 'Student'}</p>
-                                    {registration.profiles?.year && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{registration.profiles.year}</span>}
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{registration.profiles?.department || 'Student'}</p>
+                                    {registration.profiles?.year && <span className="text-[10px] bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">{registration.profiles.year}</span>}
                                   </div>
                                 </div>
                               </div>

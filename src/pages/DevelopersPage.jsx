@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Loader2, SlidersHorizontal } from 'lucide-react';
 import DeveloperCard from '../components/DeveloperCard';
+import Pagination from '../components/Pagination';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDevelopers } from '../store/slices/developersSlice';
+import { fetchConnections } from '../store/slices/connectionsSlice';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -25,15 +29,18 @@ export default function DevelopersPage() {
     skills: []
   });
 
-  const [developers, setDevelopers] = useState([]);
-  const [connectionStatusById, setConnectionStatusById] = useState({});
-  const [allSkills, setAllSkills] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { data: developers, allSkills, loading } = useSelector((state) => state.developers);
+  const { connectionStatusById } = useSelector((state) => state.connections);
   
   // Tag input state
   const [skillInput, setSkillInput] = useState('');
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const navigate = useNavigate();
 
@@ -49,78 +56,14 @@ export default function DevelopersPage() {
   }, []);
 
   useEffect(() => {
-    const fetchDevelopers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*, projects(id)');
-
-        if (error) throw error;
-        
-        const formattedDevs = data
-          .filter(profile => profile.role !== 'admin')
-          .map(profile => ({
-            ...profile,
-            accountRole: profile.role,
-            role: profile.department || 'Student',
-            hackathons: profile.hackathons_won || 0,
-            projects: profile.projects?.length || 0, 
-            available: profile.available !== false,
-            skills: profile.skills || []
-          }));
-
-        setDevelopers(formattedDevs);
-
-        const skillsSet = new Set();
-        formattedDevs.forEach(dev => {
-          if (dev.skills) dev.skills.forEach(skill => skillsSet.add(skill));
-        });
-
-        setAllSkills(Array.from(skillsSet).sort());
-      } catch (err) {
-        console.error('Error fetching developers:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDevelopers();
-  }, []);
+    dispatch(fetchDevelopers());
+  }, [dispatch]);
 
   useEffect(() => {
-    const fetchConnectionStatuses = async () => {
-      if (!user) {
-        setConnectionStatusById({});
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('connection_requests')
-        .select('requester_id, recipient_id, status')
-        .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`);
-
-      if (error) {
-        console.error('Error fetching connection statuses:', error);
-        return;
-      }
-
-      const nextMap = {};
-      for (const req of data || []) {
-        const otherId = req.requester_id === user.id ? req.recipient_id : req.requester_id;
-
-        if (req.status === 'accepted') {
-          nextMap[otherId] = 'connected';
-        } else if (req.status === 'pending') {
-          nextMap[otherId] = req.requester_id === user.id ? 'outgoing_pending' : 'incoming_pending';
-        } else if (req.status === 'rejected' && req.requester_id === user.id) {
-          nextMap[otherId] = 'rejected_outgoing';
-        }
-      }
-
-      setConnectionStatusById(nextMap);
-    };
-
-    fetchConnectionStatuses();
-  }, [user]);
+    if (user) {
+      dispatch(fetchConnections(user.id));
+    }
+  }, [user, dispatch]);
 
   const getConnectUiState = (devId) => {
     const state = connectionStatusById[devId];
@@ -146,12 +89,8 @@ export default function DevelopersPage() {
 
       if (error) throw error;
 
-      setConnectionStatusById((prev) => {
-        const next = { ...prev };
-        delete next[dev.id];
-        return next;
-      });
-
+      // We dispatch fetchConnections again to refresh the statuses globally
+      dispatch(fetchConnections(user.id));
       showToast(`Connection request to ${dev.name} canceled.`, { type: 'info' });
     } catch (err) {
       console.error('Error canceling connection request:', err);
@@ -206,6 +145,12 @@ export default function DevelopersPage() {
   };
 
   const activeFiltersCount = getActiveFilterCount();
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const safePage = Math.max(1, Math.min(currentPage, Math.max(1, totalPages)));
+  
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const currentDevelopers = filtered.slice(startIndex, startIndex + itemsPerPage);
 
   const handleAddSkill = (skill) => {
     if (skill.trim() && !filters.skills.some(s => s.toLowerCase() === skill.trim().toLowerCase())) {
@@ -263,7 +208,8 @@ export default function DevelopersPage() {
         console.warn('Connection request created, but notification failed:', notificationError);
       }
 
-      setConnectionStatusById((prev) => ({ ...prev, [dev.id]: 'outgoing_pending' }));
+      // Refresh the connection statuses globally
+      dispatch(fetchConnections(user.id));
       showToast(`Connection request sent to ${dev.name}.`, { type: 'success' });
     } catch (err) {
       console.error('Error sending connection request:', err);
@@ -276,8 +222,8 @@ export default function DevelopersPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-1">Find Developers</h1>
-        <p className="text-gray-500">Search by skills, role, or availability to build stronger project teams for hackathons, clubs, and side projects.</p>
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1">Find Developers</h1>
+        <p className="text-gray-500 dark:text-gray-400">Search by skills, role, or availability to build stronger project teams for hackathons, clubs, and side projects.</p>
       </div>
 
       {/* Search & Filters */}
@@ -295,7 +241,7 @@ export default function DevelopersPage() {
         
         <button 
           onClick={() => setShowFilters(true)}
-          className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-cyan-300 relative"
+          className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 px-5 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm transition-colors hover:border-cyan-300 relative"
         >
           <SlidersHorizontal size={18} />
           Advanced Filters
@@ -308,8 +254,8 @@ export default function DevelopersPage() {
       </div>
 
       <div className="flex items-center justify-between mb-5">
-        <p className="text-sm text-slate-500">
-          Showing <strong>{filtered.length}</strong> developer{filtered.length !== 1 ? 's' : ''}
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Showing <strong>{currentDevelopers.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filtered.length)}</strong> of <strong>{filtered.length}</strong> developer{filtered.length !== 1 ? 's' : ''}
         </p>
         
         {activeFiltersCount > 0 && (
@@ -326,25 +272,38 @@ export default function DevelopersPage() {
         <div className="py-20 flex justify-center">
           <Loader2 className="animate-spin text-cyan-600" size={40} />
         </div>
-      ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((dev) => (
-            <DeveloperCard
-              key={dev.id}
-              dev={dev}
-              onOpenProfile={() => navigate(`/profile/${dev.id}`)}
-              onConnect={() => handleConnectAction(dev)}
-              onMessage={() => navigate('/chat', { state: { startChatWith: dev.id } })}
-              connectLabel={getConnectUiState(dev.id).label}
-              connectDisabled={getConnectUiState(dev.id).disabled}
-              connectTone={getConnectUiState(dev.id).tone}
-            />
-          ))}
-        </div>
+      ) : currentDevelopers.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentDevelopers.map((dev) => (
+              <DeveloperCard
+                key={dev.id}
+                dev={dev}
+                onOpenProfile={() => navigate(`/profile/${dev.id}`)}
+                onConnect={() => handleConnectAction(dev)}
+                onMessage={() => navigate('/chat', { state: { startChatWith: dev.id } })}
+                connectLabel={getConnectUiState(dev.id).label}
+                connectDisabled={getConnectUiState(dev.id).disabled}
+                connectTone={getConnectUiState(dev.id).tone}
+              />
+            ))}
+          </div>
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={(num) => {
+              setItemsPerPage(num);
+              setCurrentPage(1);
+            }}
+            totalItems={filtered.length}
+          />
+        </>
       ) : (
-        <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 py-20 text-center">
+        <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 dark:bg-slate-900/70 py-20 text-center">
           <div className="text-5xl mb-4">👥</div>
-          <h3 className="text-lg font-semibold text-slate-700">No developers found</h3>
+          <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">No developers found</h3>
           <p className="mt-1 text-sm text-slate-400">Try adjusting your filters or search terms.</p>
         </div>
       )}
@@ -352,12 +311,12 @@ export default function DevelopersPage() {
       {/* Advanced Filters Modal */}
       {showFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg animate-in zoom-in-95 duration-200">
+           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg animate-in zoom-in-95 duration-200">
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
-                 <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+                 <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
                    <SlidersHorizontal size={18} className="text-cyan-600"/> Advanced Filters
                  </h3>
-                 <button onClick={() => setShowFilters(false)} className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"><X size={20}/></button>
+                 <button onClick={() => setShowFilters(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"><X size={20}/></button>
               </div>
               
               <div className="p-6 space-y-6">
@@ -374,7 +333,7 @@ export default function DevelopersPage() {
 
                  <div className="grid grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Branch / Dept</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Branch / Dept</label>
                       <select 
                         value={filters.branch} 
                         onChange={e => setFilters({...filters, branch: e.target.value})} 
@@ -385,7 +344,7 @@ export default function DevelopersPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Year</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Year</label>
                       <select 
                         value={filters.year} 
                         onChange={e => setFilters({...filters, year: e.target.value})} 
@@ -399,7 +358,7 @@ export default function DevelopersPage() {
 
                  <div className="grid grid-cols-2 gap-5">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Min Projects</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Min Projects</label>
                       <input 
                         type="number" 
                         min="0" 
@@ -409,7 +368,7 @@ export default function DevelopersPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Min Hackathons</label>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Min Hackathons</label>
                       <input 
                         type="number" 
                         min="0" 
@@ -421,7 +380,7 @@ export default function DevelopersPage() {
                  </div>
 
                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Required Skills</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Required Skills</label>
                     <div 
                       className="relative flex flex-wrap items-center gap-2 min-h-[46px] p-2 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400 transition-colors"
                       ref={dropdownRef}
@@ -445,7 +404,7 @@ export default function DevelopersPage() {
                         <div className="flex items-center">
                           <input
                             type="text"
-                            className="w-full bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 p-1 pr-6"
+                            className="w-full bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 p-1 pr-6"
                             placeholder={filters.skills.length === 0 ? "Type or select skills..." : "Add more..."}
                             value={skillInput}
                             onChange={(e) => {
@@ -463,7 +422,7 @@ export default function DevelopersPage() {
                           <button 
                             type="button"
                             onClick={() => setShowSkillDropdown(!showSkillDropdown)}
-                            className="absolute right-1 text-slate-400 hover:text-slate-600 p-0.5 rounded-md hover:bg-slate-200 transition-colors"
+                            className="absolute right-1 text-slate-400 hover:text-slate-600 dark:text-slate-300 p-0.5 rounded-md hover:bg-slate-200 transition-colors"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                           </button>
@@ -471,13 +430,13 @@ export default function DevelopersPage() {
                         
                         {/* Autocomplete Dropdown */}
                         {showSkillDropdown && (
-                          <div className="absolute top-full left-0 mt-2 w-48 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1">
+                          <div className="absolute top-full left-0 mt-2 w-48 max-h-48 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 rounded-xl shadow-lg z-50 py-1">
                             {allSkills
                               .filter(s => s.toLowerCase().includes(skillInput.toLowerCase()) && !filters.skills.some(fs => fs.toLowerCase() === s.toLowerCase()))
                               .map(skill => (
                                 <button
                                   key={skill}
-                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-cyan-50 hover:text-cyan-900 transition-colors"
+                                  className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-cyan-50 hover:text-cyan-900 transition-colors"
                                   onClick={() => handleAddSkill(skill)}
                                 >
                                   {skill}
@@ -494,7 +453,7 @@ export default function DevelopersPage() {
                             )}
                             
                             {!skillInput && allSkills.length === 0 && (
-                              <div className="px-4 py-2 text-sm text-slate-500 italic">
+                              <div className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 italic">
                                 No skills found
                               </div>
                             )}
@@ -516,7 +475,7 @@ export default function DevelopersPage() {
                    onClick={() => setShowFilters(false)} 
                    className="btn-primary flex-1 py-2.5 shadow-sm shadow-cyan-200 flex justify-center items-center gap-2"
                  >
-                   Show Results <span className="bg-white/20 px-2 py-0.5 rounded-md text-xs">{filtered.length}</span>
+                   Show Results <span className="bg-white/20 dark:bg-slate-900/20 px-2 py-0.5 rounded-md text-xs">{filtered.length}</span>
                  </button>
               </div>
            </div>

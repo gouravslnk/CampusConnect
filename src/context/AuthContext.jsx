@@ -6,6 +6,7 @@ const AuthContext = createContext({});
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   useEffect(() => {
     async function loadSessionProfile(activeUser) {
@@ -37,8 +38,57 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Presence effect
+  useEffect(() => {
+    if (!user?.id) {
+      setOnlineUsers(new Set());
+      return;
+    }
+
+    let isMounted = true;
+    let channel;
+
+    const initPresence = async () => {
+      // Remove existing channel to avoid StrictMode errors
+      const existingChannel = supabase.getChannels().find(c => c.topic === 'realtime:online_users');
+      if (existingChannel) {
+        await supabase.removeChannel(existingChannel);
+      }
+
+      if (!isMounted) return;
+
+      channel = supabase.channel('online_users', {
+        config: {
+          presence: { key: user.id },
+        },
+      });
+
+      channel.on('presence', { event: 'sync' }, () => {
+        if (!isMounted) return;
+        const state = channel.presenceState();
+        const onlineIds = new Set(Object.keys(state));
+        setOnlineUsers(onlineIds);
+      });
+
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED' && isMounted) {
+          await channel.track({ online_at: new Date().toISOString() });
+        }
+      });
+    };
+
+    initPresence();
+
+    return () => {
+      isMounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [user?.id]);
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, onlineUsers }}>
       {!loading && children}
     </AuthContext.Provider>
   );

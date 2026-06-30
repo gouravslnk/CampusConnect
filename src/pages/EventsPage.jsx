@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, X, Bookmark } from 'lucide-react';
 import EventCard from '../components/EventCard';
-import { supabase } from '../lib/supabase';
+import Pagination from '../components/Pagination';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchEvents, fetchSavedEvents } from '../store/slices/eventsSlice';
 import { useAuth } from '../context/AuthContext';
 
 const categories = ["All", "Hackathon", "Workshop", "Seminar", "Meetup"];
@@ -31,61 +33,22 @@ export default function EventsPage() {
   const [category, setCategory] = useState('All');
   const [sort, setSort] = useState('Latest');
   
-  const [events, setEvents] = useState([]);
-  const [savedEvents, setSavedEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { data: events, savedData: savedEvents, loading } = useSelector((state) => state.events);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
-    async function fetchEvents() {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*, event_registrations(count)');
-
-      if (error) {
-        console.error('Error fetching events:', error);
-        setLoading(false);
-        return;
-      }
-
-      const formatted = data
-        .map(e => ({
-          ...e,
-          maxSeats: e.max_seats,
-          registrations: e.event_registrations[0]?.count || 0
-        }));
-      setEvents(formatted);
-      setLoading(false);
-    }
-    fetchEvents();
-  }, []);
+    dispatch(fetchEvents());
+  }, [dispatch]);
 
   useEffect(() => {
-    async function fetchSavedEvents() {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('bookmarks')
-        .select('events(*, event_registrations(count))')
-        .eq('profile_id', user.id);
-
-      if (error) {
-        console.error('Error fetching saved events:', error);
-        return;
-      }
-
-      const formatted = data
-        .map(b => b.events)
-        .filter(Boolean)
-        .map(e => ({
-          ...e,
-          maxSeats: e.max_seats,
-          registrations: e.event_registrations[0]?.count || 0
-        }));
-      
-      setSavedEvents(formatted);
+    if (user) {
+      dispatch(fetchSavedEvents(user.id));
     }
-    fetchSavedEvents();
-  }, [user]);
+  }, [user, dispatch]);
 
   const displayEvents = tab === 'saved' ? savedEvents : events;
   
@@ -99,21 +62,27 @@ export default function EventsPage() {
     })
     .sort((a, b) => sortWithInactiveLast(a, b, sort));
 
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const safePage = Math.max(1, Math.min(currentPage, Math.max(1, totalPages)));
+  
+  const startIndex = (safePage - 1) * itemsPerPage;
+  const currentEvents = filtered.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-1">Campus Events</h1>
-        <p className="text-gray-500">Discover and register for upcoming events on your campus.</p>
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-1">Campus Events</h1>
+        <p className="text-gray-500 dark:text-gray-400">Discover and register for upcoming events on your campus.</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-8 border-b border-gray-200">
+      <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-slate-700">
         <button
           onClick={() => setTab('all')}
           className={`pb-3 font-semibold text-sm transition-colors border-b-2 ${
             tab === 'all'
               ? 'text-blue-600 border-b-blue-600'
-              : 'text-gray-500 hover:text-gray-700 border-b-transparent'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-200 border-b-transparent'
           }`}
         >
           All Events
@@ -124,7 +93,7 @@ export default function EventsPage() {
             className={`pb-3 font-semibold text-sm flex items-center gap-2 transition-colors border-b-2 ${
               tab === 'saved'
                 ? 'text-blue-600 border-b-blue-600'
-                : 'text-gray-500 hover:text-gray-700 border-b-transparent'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 dark:text-gray-200 border-b-transparent'
             }`}
           >
             <Bookmark size={16} /> Saved Events
@@ -144,7 +113,7 @@ export default function EventsPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <SlidersHorizontal size={16} className="text-gray-500" />
+          <SlidersHorizontal size={16} className="text-gray-500 dark:text-gray-400" />
           <select
             className="input-field w-auto"
             value={sort}
@@ -163,7 +132,7 @@ export default function EventsPage() {
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               category === cat
                 ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:border-blue-300 hover:text-blue-600'
             }`}
           >
             {cat}
@@ -180,8 +149,8 @@ export default function EventsPage() {
       </div>
 
       {!loading && (
-        <p className="text-sm text-gray-500 mb-5">
-          Showing <strong>{filtered.length}</strong> event{filtered.length !== 1 ? 's' : ''}
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+          Showing <strong>{currentEvents.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filtered.length)}</strong> of <strong>{filtered.length}</strong> event{filtered.length !== 1 ? 's' : ''}
         </p>
       )}
 
@@ -189,16 +158,30 @@ export default function EventsPage() {
         <div className="flex justify-center py-20 px-4">
            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
-      ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </div>
+      ) : currentEvents.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+          
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={(num) => {
+              setItemsPerPage(num);
+              setCurrentPage(1);
+            }}
+            totalItems={filtered.length}
+          />
+        </>
       ) : (
         <div className="text-center py-20">
           <div className="text-5xl mb-4">🔍</div>
-          <h3 className="text-lg font-semibold text-gray-700">
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
             {tab === 'saved' ? 'No saved events yet' : 'No events found'}
           </h3>
           <p className="text-gray-400 text-sm mt-1">

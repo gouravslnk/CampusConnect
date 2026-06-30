@@ -119,17 +119,17 @@ export default function AIAssistantPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid min-h-[calc(100vh-150px)] grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
         <aside className="space-y-4">
-          <section className="rounded-[1.5rem] border border-slate-200 bg-white/95 p-5 shadow-xl shadow-slate-200/50">
+          <section className="rounded-[1.5rem] border border-slate-200 bg-white/95 dark:bg-slate-900/95 p-5 shadow-xl shadow-slate-200/50">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-cyan-300">
                 <Bot size={22} />
               </div>
               <div>
-                <h1 className="text-lg font-black text-slate-900">Campus AI</h1>
-                <p className="text-xs text-slate-500">Events, teams, ideas</p>
+                <h1 className="text-lg font-black text-slate-900 dark:text-white">Campus AI</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Events, teams, ideas</p>
               </div>
             </div>
-            <p className="text-sm leading-6 text-slate-600">
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
               This assistant answers using your CampusConnect data, including events, skills, registrations, and available students.
             </p>
           </section>
@@ -137,24 +137,24 @@ export default function AIAssistantPage() {
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
               <CalendarDays className="mb-2 text-cyan-700" size={20} />
-              <p className="text-2xl font-black text-slate-900">{loading ? '-' : upcomingCount}</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">{loading ? '-' : upcomingCount}</p>
               <p className="text-xs font-semibold text-cyan-800">Upcoming</p>
             </div>
             <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
               <Users className="mb-2 text-indigo-700" size={20} />
-              <p className="text-2xl font-black text-slate-900">{loading ? '-' : availableCount}</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">{loading ? '-' : availableCount}</p>
               <p className="text-xs font-semibold text-indigo-800">Available</p>
             </div>
           </section>
 
-          <section className="rounded-[1.5rem] border border-slate-200 bg-white/95 p-5 shadow-xl shadow-slate-200/50">
-            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Try asking</h2>
+          <section className="rounded-[1.5rem] border border-slate-200 bg-white/95 dark:bg-slate-900/95 p-5 shadow-xl shadow-slate-200/50">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Try asking</h2>
             <div className="space-y-2">
               {quickPrompts.map((prompt) => (
                 <button
                   key={prompt}
                   onClick={() => askAssistant(prompt)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-800"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm font-medium text-slate-700 dark:text-slate-200 transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-800"
                 >
                   {prompt}
                 </button>
@@ -163,15 +163,15 @@ export default function AIAssistantPage() {
           </section>
         </aside>
 
-        <section className="flex min-h-[640px] flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/50">
+        <section className="flex min-h-[640px] flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white/95 dark:bg-slate-900/95 shadow-xl shadow-slate-200/50">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700">
                 <Sparkles size={20} />
               </div>
               <div>
-                <h2 className="font-bold text-slate-900">AI Chatbot</h2>
-                <p className="text-xs text-slate-500">
+                <h2 className="font-bold text-slate-900 dark:text-white">AI Chatbot</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {loading ? 'Loading campus context...' : 'Ready with live campus context'}
                 </p>
               </div>
@@ -194,7 +194,7 @@ export default function AIAssistantPage() {
                       <div className={`rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm ${
                         fromUser
                           ? 'rounded-br-md bg-slate-900 text-white'
-                          : 'rounded-bl-md border border-slate-100 bg-white text-slate-700'
+                          : 'rounded-bl-md border border-slate-100 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200'
                       }`}>
                         {formatMessage(message.text)}
                       </div>
@@ -209,7 +209,7 @@ export default function AIAssistantPage() {
                     <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-700">
                       <Bot size={16} />
                     </div>
-                    <div className="rounded-3xl rounded-bl-md border border-slate-100 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+                    <div className="rounded-3xl rounded-bl-md border border-slate-100 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-500 dark:text-slate-400 shadow-sm">
                       <span className="inline-flex items-center gap-2">
                         <Loader2 className="animate-spin" size={14} /> Thinking with campus data...
                       </span>
@@ -221,7 +221,7 @@ export default function AIAssistantPage() {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 bg-white p-4">
+          <div className="border-t border-slate-100 bg-white dark:bg-slate-900 p-4">
             <div className="flex items-center gap-3">
               <input
                 className="input-field flex-1"

@@ -192,7 +192,7 @@ function answerTeammates(students, user, events, question) {
       const skills = s.matchedSkills.length ? s.matchedSkills.join(', ') : (s.skills || []).slice(0, 3).join(', ');
       return `${s.name} — ${s.score}% fit, skills: ${skills || 'not listed'}`;
     })
-  )}\n\nOpen Team Builder to create a group chat and invite them.`;
+  )}\n\nGo to the Developers page to connect with them.`;
 }
 
 function answerStudentProfile(students, user, events, question) {
@@ -210,12 +210,12 @@ function answerStudentProfile(students, user, events, question) {
     : 'profile fit needs more skill data';
   const reasons = scored.reasons?.length ? `\n\nWhy: ${scored.reasons.join('; ')}.` : '';
 
-  return `${student.name || 'This student'} looks relevant for Team Builder.\n\n${bulletList([
-    `Skills: ${skills.join(', ') || 'not listed yet'}`,
-    `Availability: ${student.available === false ? 'not available right now' : 'available'}`,
-    `Match: ${fitLine}`,
-    `Projects listed: ${student.projects || 0}`,
-  ])}${reasons}\n\nUse Team Builder if you want to invite them or compare them with other teammates.`;
+  return `${student.name || 'This student'} looks relevant.\n\n${bulletList([
+      `Skills: ${(student.skills || []).join(', ') || 'Not specified'}`,
+      `Projects: ${student.projects?.length || 0}`,
+      `Hackathons: ${student.hackathons_won || 0}`,
+      `Available: ${student.available !== false ? 'Yes' : 'No'}`,
+    ])}${reasons}\n\nGo to their profile to connect or send a message.`;
 }
 
 function answerIdeasLocal(events, user, question) {
@@ -286,7 +286,7 @@ function answerCampusQuestionLocal(question, context) {
 
   if (!q.trim()) return answerHelp();
   if (isGreeting(q)) {
-    return 'Hi! Ask me about CampusConnect events, teammates, project ideas, hackathon preparation, or a student name from Team Builder.';
+    return 'Hi! Ask me about CampusConnect events, teammates, project ideas, hackathon preparation, or a specific student.';
   }
 
   // Scope guard — refuse clearly off-topic questions

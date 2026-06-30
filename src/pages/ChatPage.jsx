@@ -7,7 +7,7 @@ import { useToast } from '../context/ToastContext';
 import EmojiPicker from 'emoji-picker-react';
 
 export default function ChatPage() {
-  const { user } = useAuth();
+  const { user, onlineUsers } = useAuth();
   const { showToast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function ChatPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showOptions, setShowOptions] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -151,9 +152,7 @@ export default function ChatPage() {
 
   const handleDeleteChat = async () => {
     if (!activeConv) return;
-    const confirmDelete = window.confirm("Are you sure you want to delete this conversation? This cannot be undone.");
-    if (!confirmDelete) return;
-
+    
     try {
       const { error } = await supabase
         .from('conversations')
@@ -166,6 +165,7 @@ export default function ChatPage() {
       setActiveConv(null);
       setMessages([]);
       setShowOptions(false);
+      setShowDeleteModal(false);
     } catch (err) {
       console.error("Error deleting conversation:", err);
       showToast("Failed to delete the conversation.", { type: 'error' });
@@ -567,18 +567,16 @@ export default function ChatPage() {
   if (!user) return <div className="text-center py-20">Please log in to view messages.</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <h1 className="text-2xl font-extrabold text-slate-900 mb-6">Messages</h1>
-
-      <div className="flex h-[calc(100vh-220px)] min-h-[500px] bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+    <>
+      <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden bg-white dark:bg-slate-950">
         {/* Sidebar */}
-        <div className="w-80 border-r border-slate-200 flex flex-col flex-shrink-0">
-          <div className="p-4 border-b border-slate-200">
+        <div className={`w-full md:w-80 lg:w-96 border-r border-slate-200 dark:border-slate-800 flex flex-col flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50 ${activeConv ? 'hidden md:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2 mb-3">
-              <h2 className="text-sm font-bold text-slate-800 flex-1">Conversations</h2>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white flex-1">Messages</h2>
               <button 
                 onClick={() => setShowNewChatModal(true)}
-                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                className="p-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
                 title="New Conversation"
               >
                 <Plus size={16} />
@@ -588,7 +586,7 @@ export default function ChatPage() {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                className="input-field pl-9 text-sm bg-slate-50"
+                className="input-field pl-9 text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:border-cyan-500"
                 placeholder="Search conversations..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -598,9 +596,9 @@ export default function ChatPage() {
 
           <div className="overflow-y-auto flex-1">
             {loading ? (
-              <div className="p-8 text-center text-sm text-slate-500">Loading messages...</div>
+              <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">Loading messages...</div>
             ) : filteredConvs.length === 0 ? (
-              <div className="p-8 text-center text-sm text-slate-500">
+              <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
                 No conversations yet. Connect with a developer to start chatting!
               </div>
             ) : (
@@ -608,24 +606,24 @@ export default function ChatPage() {
                 <button
                   key={conv.id}
                   onClick={() => selectConv(conv)}
-                  className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b border-slate-100 ${
-                    activeConv?.id === conv.id ? 'bg-slate-50 border-l-2 border-l-cyan-500' : 'hover:bg-slate-50'
+                  className={`w-full flex items-center gap-3 p-4 text-left transition-colors border-b border-slate-100 dark:border-slate-800 ${
+                    activeConv?.id === conv.id ? 'bg-slate-100 dark:bg-slate-800 border-l-2 border-l-cyan-500' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`}
                 >
                   <div className="relative flex-shrink-0">
-                    <div className="w-11 h-11 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center text-xs font-semibold">
+                    <div className="w-11 h-11 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-semibold">
                       {getInitials(conv.name)}
                     </div>
-                    {conv.online && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                    {(!conv.isGroup && onlineUsers?.has(conv.otherUserId)) && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm text-slate-900">{conv.name}</span>
+                      <span className="font-semibold text-sm text-slate-900 dark:text-white">{conv.name}</span>
                       <span className="text-xs text-slate-400">{conv.time}</span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate">{conv.lastMessage || 'No messages yet'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{conv.lastMessage || 'No messages yet'}</p>
                   </div>
                   {conv.unread > 0 && (
                     <span className="bg-cyan-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center flex-shrink-0">
@@ -639,44 +637,51 @@ export default function ChatPage() {
         </div>
 
         {/* Chat area */}
-        <div className="flex-1 flex flex-col bg-slate-50/50">
+        <div className={`flex-1 flex flex-col bg-white dark:bg-slate-950 ${!activeConv ? 'hidden md:flex' : 'flex'}`}>
           {!activeConv ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-              <MessageSquare size={48} className="mb-4 text-slate-200" />
-              <p className="font-medium text-slate-500">Select a conversation to start messaging</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+              <MessageSquare size={48} className="mb-4 text-slate-200 dark:text-slate-700" />
+              <p className="font-medium text-slate-500 dark:text-slate-400">Select a conversation to start messaging</p>
             </div>
           ) : (
             <>
               {/* Chat header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center text-xs font-semibold">
+                  <button 
+                    className="md:hidden p-2 -ml-2 mr-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                    onClick={() => setActiveConv(null)}
+                  >
+                    <X size={20} />
+                  </button>
+                  <div className={`relative ${!activeConv.isGroup ? 'cursor-pointer' : ''}`} onClick={() => !activeConv.isGroup && navigate(`/profile/${activeConv.otherUserId}`)}>
+                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold shrink-0">
                       {getInitials(activeConv.name)}
                     </div>
-                    {activeConv.online && (
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+                    {(!activeConv.isGroup && activeConv.otherUserId) && (
+                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${onlineUsers?.has(activeConv.otherUserId) ? 'bg-emerald-500' : 'bg-slate-400'}`}></div>
                     )}
                   </div>
-                  <div>
-                    <p className="font-semibold text-slate-900">{activeConv.name}</p>
-                    <p className="text-xs text-slate-500">
-                      {activeConv.isGroup && activeConv.participants 
-                        ? activeConv.participants.map(p => p.name).join(', ') 
-                        : (activeConv.online ? 'Online' : 'Offline')}
+                  <div className={!activeConv.isGroup ? 'cursor-pointer hover:underline' : ''} onClick={() => !activeConv.isGroup && navigate(`/profile/${activeConv.otherUserId}`)}>
+                    <p className="font-semibold text-slate-900 dark:text-white">{activeConv.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {activeConv.isGroup 
+                        ? `${activeConv.participants?.length || 0} members` 
+                        : (onlineUsers?.has(activeConv.otherUserId) ? 'Online' : 'Offline')
+                      }
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 relative" ref={optionsRef}>
                   <button 
                     onClick={() => setShowOptions(!showOptions)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-lg transition-colors"
                   >
                     <MoreVertical size={18} />
                   </button>
                   
                   {showOptions && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-10 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10 animate-in fade-in zoom-in-95 duration-100">
                       {activeConv.isGroup && (
                         <>
                           <button 
@@ -684,7 +689,7 @@ export default function ChatPage() {
                               showToast("Group photo uploads will be available soon!", { type: 'info' });
                               setShowOptions(false);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium border-b border-slate-100"
+                            className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium border-b border-slate-100 dark:border-slate-700"
                           >
                             Change Group Photo
                           </button>
@@ -694,15 +699,18 @@ export default function ChatPage() {
                               setShowRenameModal(true);
                               setShowOptions(false);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium border-b border-slate-100"
+                            className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium border-b border-slate-100 dark:border-slate-700"
                           >
                             Change Group Name
                           </button>
                         </>
                       )}
                       <button 
-                        onClick={handleDeleteChat}
-                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                        onClick={() => {
+                          setShowOptions(false);
+                          setShowDeleteModal(true);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                       >
                         Delete Conversation
                       </button>
@@ -712,9 +720,9 @@ export default function ChatPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-slate-50/50">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3 bg-slate-50/50 dark:bg-slate-950/50">
                 {messages.length === 0 ? (
-                  <div className="text-center text-slate-500 text-sm mt-10">
+                  <div className="text-center text-slate-500 dark:text-slate-400 text-sm mt-10">
                     Send a message to start the conversation!
                   </div>
                 ) : (
@@ -722,13 +730,13 @@ export default function ChatPage() {
                     <div key={msg.id} className={`flex ${msg.from === 'me' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-xs lg:max-w-md`}>
                         {msg.from === 'them' && activeConv.isGroup && (
-                          <p className="text-xs text-slate-500 mb-1 ml-1">{msg.senderName}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 ml-1">{msg.senderName}</p>
                         )}
                         <div
-                          className={`px-4 py-2.5 rounded-[16px] text-sm shadow-sm ${
+                          className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm max-w-full break-words ${
                             msg.from === 'me'
-                              ? 'bg-slate-900 text-white rounded-br-sm'
-                              : 'bg-white text-slate-800 border border-slate-200 rounded-bl-sm'
+                              ? 'bg-cyan-600 text-white rounded-br-sm'
+                              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-sm'
                           }`}
                         >
                           {msg.text}
@@ -744,9 +752,9 @@ export default function ChatPage() {
               </div>
 
               {/* Input */}
-              <div className="px-6 py-4 border-t border-slate-200 bg-white relative">
+              <div className="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 relative">
                 {showEmojiPicker && (
-                  <div className="absolute bottom-[80px] right-20 z-50 shadow-2xl rounded-lg" ref={emojiPickerRef}>
+                  <div className="absolute bottom-[80px] right-20 z-50 shadow-2xl rounded-lg overflow-hidden" ref={emojiPickerRef}>
                     <EmojiPicker 
                       onEmojiClick={(emojiObject) => {
                         setInput(prev => prev + emojiObject.emoji);
@@ -756,7 +764,7 @@ export default function ChatPage() {
                 )}
                 <div className="flex items-center gap-3">
                   <button 
-                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                    className="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors"
                     onClick={() => showToast('File sharing will be available soon!', { type: 'info' })}
                     title="Attach file"
                   >
@@ -776,7 +784,7 @@ export default function ChatPage() {
                     }}
                   />
                   <button 
-                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                    className="text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                     title="Add emoji"
                   >
@@ -801,12 +809,12 @@ export default function ChatPage() {
       {/* Rename Group Modal */}
       {showRenameModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6">
-              <h3 className="text-xl font-bold text-slate-900 mb-4">Rename Group</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Rename Group</h3>
               <input
                 type="text"
-                className="input-field w-full mb-6"
+                className="input-field w-full mb-6 dark:bg-slate-950 dark:border-slate-700"
                 placeholder="Enter new group name"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
@@ -821,7 +829,7 @@ export default function ChatPage() {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowRenameModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors font-medium"
+                  className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-xl transition-colors font-medium"
                 >
                   Cancel
                 </button>
@@ -845,22 +853,22 @@ export default function ChatPage() {
       {/* New Chat Modal */}
       {showNewChatModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">New Conversation</h3>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">New Conversation</h3>
               <button 
                 onClick={() => setShowNewChatModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-300 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X size={20} />
               </button>
             </div>
-            <div className="p-4 border-b border-slate-100">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  className="input-field pl-9 text-sm"
+                  className="input-field pl-9 text-sm dark:bg-slate-950 dark:border-slate-700"
                   placeholder="Search students by name..."
                   value={globalSearch}
                   onChange={(e) => setGlobalSearch(e.target.value)}
@@ -874,7 +882,7 @@ export default function ChatPage() {
                   <Loader2 className="animate-spin" size={24} />
                 </div>
               ) : globalUsers.length === 0 ? (
-                <div className="text-center p-8 text-sm text-slate-500">
+                <div className="text-center p-8 text-sm text-slate-500 dark:text-slate-400">
                   No users found.
                 </div>
               ) : (
@@ -886,14 +894,14 @@ export default function ChatPage() {
                       setGlobalSearch('');
                       startNewChat(u.id);
                     }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors text-left"
+                    className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors text-left"
                   >
-                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center text-xs font-semibold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-sm font-semibold shrink-0">
                       {getInitials(u.name)}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm text-slate-900 truncate">{u.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{u.department || 'Student'}</p>
+                      <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">{u.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{u.department || 'Student'}</p>
                     </div>
                   </button>
                 ))
@@ -902,6 +910,33 @@ export default function ChatPage() {
           </div>
         </div>
       )}
-    </div>
+      {/* Delete Chat Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Delete Conversation?</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                Are you sure you want to delete this conversation? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteChat}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors font-medium shadow-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

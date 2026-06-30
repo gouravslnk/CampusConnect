@@ -184,18 +184,18 @@ export default function ProfileViewPage() {
   }
 
   if (!profile) {
-    return <div className="text-center py-32 text-gray-500">Profile could not be loaded. Ensure your record exists.</div>;
+    return <div className="text-center py-32 text-gray-500 dark:text-gray-400">Profile could not be loaded. Ensure your record exists.</div>;
   }
 
   const isOwnProfile = profile.id === user?.id;
   const connectButton = getConnectButtonState();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">{profile.name}'s Profile</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">{profile.name}'s Profile</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {isOwnProfile ? 'This is your profile preview.' : 'View this developer profile and reach out.'}
           </p>
         </div>
@@ -207,7 +207,7 @@ export default function ProfileViewPage() {
               disabled={connectButton.disabled}
               className={`text-sm flex items-center gap-2 rounded-xl px-4 py-2.5 font-medium transition-colors ${
                 connectButton.disabled
-                  ? 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-500'
+                  ? 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-500 dark:text-slate-400'
                   : connectButton.tone === 'danger'
                     ? 'border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
                     : 'btn-primary'
@@ -222,7 +222,7 @@ export default function ProfileViewPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="space-y-4">
           <div className="card p-6 text-center shadow-sm">
             {profile.avatar ? (
@@ -233,23 +233,23 @@ export default function ProfileViewPage() {
               </div>
             )}
 
-            <h2 className="text-xl font-bold text-gray-900 leading-tight">{profile.name}</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{profile.name}</h2>
             <p className="text-blue-600 font-medium text-sm capitalize mt-1">{profile.role?.replace('_', ' ')}</p>
-            <p className="text-gray-500 text-xs mt-1">{profile.department} {profile.year ? `• ${profile.year}` : ''}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">{profile.department} {profile.year ? `• ${profile.year}` : ''}</p>
 
             <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-left">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Enrollment No.</p>
-              <p className="mt-1 text-sm font-bold text-gray-900 break-all">
+              <p className="mt-1 text-sm font-bold text-gray-900 dark:text-white break-all">
                 {profile.enrollment_no || 'Not added yet'}
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 mt-3">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-3">
               <Mail size={13} className="text-gray-400" /> {profile.email}
             </div>
 
-            <div className="flex justify-center gap-4 mt-5 pt-4 border-t border-gray-100">
-              <a href={profile.github || '#'} target="_blank" rel="noreferrer" className={`text-gray-400 hover:text-gray-900 transition-colors ${!profile.github && 'opacity-30 cursor-not-allowed'}`}>
+            <div className="flex justify-center gap-4 mt-5 pt-4 border-t border-gray-100 dark:border-slate-800">
+              <a href={profile.github || '#'} target="_blank" rel="noreferrer" className={`text-gray-400 hover:text-gray-900 dark:hover:text-white dark:text-white transition-colors ${!profile.github && 'opacity-30 cursor-not-allowed'}`}>
                 <Github size={20} />
               </a>
               <a href={profile.linkedin || '#'} target="_blank" rel="noreferrer" className={`text-gray-400 hover:text-blue-600 transition-colors ${!profile.linkedin && 'opacity-30 cursor-not-allowed'}`}>
@@ -259,32 +259,32 @@ export default function ProfileViewPage() {
           </div>
 
           <div className="card p-5 shadow-sm">
-            <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wider">Activity Highlights</h3>
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4 text-sm uppercase tracking-wider">Activity Highlights</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                <div className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300">
                   <div className="p-1.5 bg-blue-50 rounded-lg"><Code2 size={15} className="text-blue-500" /></div> Projects
                 </div>
-                <span className="font-bold text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md">{profile.projects.length}</span>
+                <span className="font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-800 px-2 py-0.5 rounded-md">{profile.projects.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                <div className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300">
                   <div className="p-1.5 bg-purple-50 rounded-lg"><Briefcase size={15} className="text-purple-500" /></div> Events
                 </div>
-                <span className="font-bold text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md">{profile.events_attended || 0}</span>
+                <span className="font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-800 px-2 py-0.5 rounded-md">{profile.events_attended || 0}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-5">
+        <div className="lg:col-span-3 space-y-5">
           <div className="card p-6 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-4">About Me</h3>
-            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{profile.bio || 'No bio added yet.'}</p>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4">About Me</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{profile.bio || 'No bio added yet.'}</p>
           </div>
 
           <div className="card p-6 shadow-sm">
-            <h3 className="font-bold text-gray-900 mb-5">Skills & Expertise</h3>
+            <h3 className="font-bold text-gray-900 dark:text-white mb-5">Skills & Expertise</h3>
             <div className="flex flex-wrap gap-2 mb-2">
               {profile.skills.length === 0 ? (
                 <p className="text-sm text-gray-400 w-full mb-1">No skills listed yet.</p>
@@ -303,20 +303,20 @@ export default function ProfileViewPage() {
 
           <div className="card p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">Events</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white">Events</h3>
             </div>
 
             {(!profile.past_events || profile.past_events.length === 0) ? (
-              <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
                 <Briefcase size={32} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500 font-medium">No events added yet.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No events added yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.past_events.map((ev) => (
-                  <div key={ev.id} className="border border-gray-200 bg-white rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
-                    <h4 className="font-bold text-gray-900 text-base truncate" title={ev.title}>{ev.title}</h4>
-                    {ev.role && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{ev.role}</span>}
+                  <div key={ev.id} className="border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
+                    <h4 className="font-bold text-gray-900 dark:text-white text-base truncate" title={ev.title}>{ev.title}</h4>
+                    {ev.role && <span className="inline-block bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{ev.role}</span>}
                     {ev.date && (() => {
                       const raw = String(ev.date);
                       let display = raw;
@@ -336,7 +336,7 @@ export default function ProfileViewPage() {
 
                       return <p className="text-xs text-gray-400 mt-2">{display}</p>;
                     })()}
-                    <p className="text-sm text-gray-600 mt-3 line-clamp-3 leading-relaxed">{ev.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 line-clamp-3 leading-relaxed">{ev.description}</p>
                   </div>
                 ))}
               </div>
@@ -345,19 +345,19 @@ export default function ProfileViewPage() {
 
           <div className="card p-6 shadow-sm border-t-4 border-t-indigo-500">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-gray-900">Projects & Portfolio</h3>
+              <h3 className="font-bold text-gray-900 dark:text-white">Projects & Portfolio</h3>
             </div>
 
             {profile.projects.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
                 <Code2 size={32} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500 font-medium">No projects added yet.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No projects added yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {profile.projects.map((project) => (
-                  <div key={project.id} className="border border-gray-200 bg-white rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
-                    <h4 className="font-bold text-gray-900 text-base min-w-0">
+                  <div key={project.id} className="border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl p-5 hover:border-indigo-300 hover:shadow-md transition-all relative">
+                    <h4 className="font-bold text-gray-900 dark:text-white text-base min-w-0">
                       {project.link ? (
                         <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors flex items-center gap-1.5 min-w-0" title={project.title}>
                           <span className="truncate">{project.title}</span>
@@ -367,8 +367,8 @@ export default function ProfileViewPage() {
                         <span className="truncate block" title={project.title}>{project.title}</span>
                       )}
                     </h4>
-                    {project.tech && <span className="inline-block bg-gray-100 text-gray-700 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{project.tech}</span>}
-                    <p className="text-sm text-gray-600 mt-3 line-clamp-3 leading-relaxed">{project.description}</p>
+                    {project.tech && <span className="inline-block bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 mt-2.5 text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider">{project.tech}</span>}
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 line-clamp-3 leading-relaxed">{project.description}</p>
                   </div>
                 ))}
               </div>

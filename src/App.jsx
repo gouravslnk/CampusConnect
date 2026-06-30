@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -21,7 +22,6 @@ import CreateEventPage from './pages/CreateEventPage';
 import ClubsPage from './pages/ClubsPage';
 import ClubDetailPage from './pages/ClubDetailPage';
 import SystemAdminDashboard from './pages/SystemAdminDashboard';
-import AITeamsPage from './pages/AITeamsPage';
 import AIAssistantPage from './pages/AIAssistantPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -49,13 +49,13 @@ function ParticipantRoute({ user, children }) {
 }
 
 // Layout with Navbar + Footer
-function Layout({ user, onLogout, children, withFooter = true }) {
+function Layout({ user, onLogout, children, withFooter = true, withChatbot = true }) {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar user={user} onLogout={onLogout} />
       <main className="flex-1">{children}</main>
       {withFooter && <Footer />}
-      {user && user.role !== 'admin' && <FloatingAIChatbot />}
+      {user && user.role !== 'admin' && withChatbot && <FloatingAIChatbot />}
     </div>
   );
 }
@@ -78,6 +78,7 @@ function AppContent() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public Landing */}
         <Route
@@ -127,16 +128,6 @@ function AppContent() {
           }
         />
         <Route
-          path="/ai-teams"
-          element={
-            <ParticipantRoute user={user}>
-              <Layout user={user} onLogout={handleLogout}>
-                <AITeamsPage />
-              </Layout>
-            </ParticipantRoute>
-          }
-        />
-        <Route
           path="/ai-assistant"
           element={
             <ParticipantRoute user={user}>
@@ -180,7 +171,7 @@ function AppContent() {
           path="/chat"
           element={
             <ParticipantRoute user={user}>
-              <Layout user={user} onLogout={handleLogout} withFooter={false}>
+              <Layout user={user} onLogout={handleLogout} withFooter={false} withChatbot={false}>
                 <ChatPage user={user} />
               </Layout>
             </ParticipantRoute>
@@ -274,8 +265,8 @@ function AppContent() {
             <Layout user={user} onLogout={handleLogout}>
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
                 <div className="text-8xl font-black text-gray-100 mb-4">404</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Page Not Found</h2>
-                <p className="text-gray-500 mb-6">The page you're looking for doesn't exist.</p>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Page Not Found</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">The page you're looking for doesn't exist.</p>
                 <a href="/" className="btn-primary">Go Home</a>
               </div>
             </Layout>
