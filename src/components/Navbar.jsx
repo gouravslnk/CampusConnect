@@ -21,6 +21,7 @@ export default function Navbar({ user, onLogout }) {
   const [dropOpen, setDropOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const notifRef = useRef(null);
   const dropRef = useRef(null);
@@ -57,6 +58,32 @@ export default function Navbar({ user, onLogout }) {
 
   useEffect(() => {
     if (!user) return;
+    
+    const fetchUnreadMessages = async () => {
+      const { data, error } = await supabase
+        .from('conversation_participants')
+        .select('unread_count')
+        .eq('profile_id', user.id);
+
+      if (!error && data) {
+        const totalUnread = data.reduce((acc, curr) => acc + (curr.unread_count || 0), 0);
+        setUnreadMsgCount(totalUnread);
+      }
+    };
+
+    fetchUnreadMessages();
+
+    const msgChannel = supabase
+      .channel('navbar_msg_channel')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversation_participants',
+        filter: `profile_id=eq.${user.id}`
+      }, () => {
+        fetchUnreadMessages();
+      })
+      .subscribe();
     
     const fetchNotifications = async () => {
       const { data: rawNotifications, error: notificationsError } = await supabase
@@ -157,6 +184,7 @@ export default function Navbar({ user, onLogout }) {
     return () => {
       supabase.removeChannel(notificationsChannel);
       supabase.removeChannel(requestsChannel);
+      supabase.removeChannel(msgChannel);
     };
   }, [user]);
 
@@ -273,13 +301,18 @@ export default function Navbar({ user, onLogout }) {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors relative flex items-center gap-1.5 ${
                     isActive(link.to)
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   {link.label}
+                  {link.to === '/chat' && unreadMsgCount > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {unreadMsgCount > 4 ? '4+' : unreadMsgCount}
+                    </span>
+                  )}
                 </Link>
                 );
               })}
@@ -503,11 +536,16 @@ export default function Navbar({ user, onLogout }) {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
-                className={`block px-4 py-2 rounded-lg text-sm font-medium ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-between ${
                   isActive(link.to) ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 {link.label}
+                {link.to === '/chat' && unreadMsgCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                    {unreadMsgCount > 4 ? '4+' : unreadMsgCount}
+                  </span>
+                )}
               </Link>
               );
             })}
