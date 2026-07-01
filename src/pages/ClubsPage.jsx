@@ -7,7 +7,7 @@ import { fetchClubs } from '../store/slices/clubsSlice';
 
 export default function ClubsPage() {
   const dispatch = useDispatch();
-  const { data: clubs, loading } = useSelector((state) => state.clubs);
+  const { data: clubs, loading, hasFetched } = useSelector((state) => state.clubs);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Pagination State
@@ -15,8 +15,10 @@ export default function ClubsPage() {
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
-    dispatch(fetchClubs());
-  }, [dispatch]);
+    if (!hasFetched) {
+      dispatch(fetchClubs());
+    }
+  }, [dispatch, hasFetched]);
 
   const filteredClubs = clubs.filter(club =>
     club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

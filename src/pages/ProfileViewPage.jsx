@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Github, Linkedin, Mail, Plus, MessageSquare, Code2, Briefcase, ExternalLink } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -10,8 +11,21 @@ export default function ProfileViewPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { id: profileId } = useParams();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: reduxDevelopers } = useSelector((state) => state.developers);
+  const reduxDeveloper = reduxDevelopers.find(d => d.id === profileId);
+
+  const [profile, setProfile] = useState(() => {
+    if (reduxDeveloper) {
+      return {
+        ...reduxDeveloper,
+        projects: [],
+        past_events: [],
+        skills: reduxDeveloper.skills || []
+      };
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(!reduxDeveloper);
   const [connectionState, setConnectionState] = useState('none');
 
   useEffect(() => {
@@ -180,7 +194,30 @@ export default function ProfileViewPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-32"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded mb-2"></div>
+            <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="space-y-4">
+            <div className="card p-6 h-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl">
+               <div className="w-28 h-28 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-4"></div>
+               <div className="h-6 w-3/4 mx-auto bg-slate-200 dark:bg-slate-800 rounded mb-2"></div>
+               <div className="h-4 w-1/2 mx-auto bg-slate-200 dark:bg-slate-800 rounded"></div>
+            </div>
+          </div>
+          <div className="lg:col-span-3 space-y-5">
+            <div className="card p-6 h-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl"></div>
+            <div className="card p-6 h-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl"></div>
+            <div className="card p-6 h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!profile) {
@@ -215,9 +252,11 @@ export default function ProfileViewPage() {
             >
               <Plus size={14} /> {connectButton.label}
             </button>
-            <button onClick={handleMessage} className="btn-secondary text-sm flex items-center gap-2">
-              <MessageSquare size={14} /> Message
-            </button>
+            {connectionState === 'connected' && (
+              <button onClick={handleMessage} className="btn-secondary text-sm flex items-center gap-2">
+                <MessageSquare size={14} /> Message
+              </button>
+            )}
           </div>
         )}
       </div>

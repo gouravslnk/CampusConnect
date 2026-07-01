@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Building, CalendarDays, Mail, User, Users } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { supabase } from '../lib/supabase';
 
 function formatDate(value) {
@@ -11,9 +12,12 @@ function formatDate(value) {
 export default function ClubDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [club, setClub] = useState(null);
+  const { data: reduxClubs } = useSelector(state => state.clubs);
+  const reduxClub = reduxClubs.find(c => c.id === id);
+
+  const [club, setClub] = useState(reduxClub || null);
   const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!reduxClub);
 
   const normalize = (value) => String(value || '').trim().toLowerCase();
 
@@ -23,8 +27,6 @@ export default function ClubDetailPage() {
         setLoading(false);
         return;
       }
-
-      setLoading(true);
 
       const { data: clubData, error: clubError } = await supabase
         .from('clubs')
@@ -73,9 +75,24 @@ export default function ClubDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="h-8 w-40 animate-pulse rounded-full bg-slate-200" />
-        <div className="mt-6 h-40 animate-pulse rounded-3xl bg-white dark:bg-slate-900 shadow-sm" />
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 animate-pulse">
+        <div className="mb-6 h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded"></div>
+        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+          <div className="px-6 py-8 sm:px-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+            <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded-full mb-4"></div>
+            <div className="h-10 w-1/3 bg-slate-200 dark:bg-slate-700 rounded mb-3"></div>
+            <div className="h-4 w-1/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+          </div>
+          <div className="grid gap-6 p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
+            <div className="space-y-6">
+              <div className="h-32 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800"></div>
+              <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800"></div>
+            </div>
+            <div className="space-y-6">
+              <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -30,8 +30,8 @@ export default function DevelopersPage() {
   });
 
   const dispatch = useDispatch();
-  const { data: developers, allSkills, loading } = useSelector((state) => state.developers);
-  const { connectionStatusById } = useSelector((state) => state.connections);
+  const { data: developers, allSkills, loading, hasFetched } = useSelector((state) => state.developers);
+  const { connectionStatusById, hasFetched: hasFetchedConnections } = useSelector((state) => state.connections);
   
   // Tag input state
   const [skillInput, setSkillInput] = useState('');
@@ -56,14 +56,16 @@ export default function DevelopersPage() {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchDevelopers());
-  }, [dispatch]);
+    if (!hasFetched) {
+      dispatch(fetchDevelopers());
+    }
+  }, [dispatch, hasFetched]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !hasFetchedConnections) {
       dispatch(fetchConnections(user.id));
     }
-  }, [user, dispatch]);
+  }, [user, dispatch, hasFetchedConnections]);
 
   const getConnectUiState = (devId) => {
     const state = connectionStatusById[devId];
@@ -269,8 +271,31 @@ export default function DevelopersPage() {
       </div>
 
       {loading ? (
-        <div className="py-20 flex justify-center">
-          <Loader2 className="animate-spin text-cyan-600" size={40} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col animate-pulse h-full">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
+                <div className="flex-1 pt-1">
+                  <div className="h-5 w-1/2 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                  <div className="h-3 w-1/3 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                </div>
+              </div>
+              <div className="space-y-2 mb-5">
+                <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-3 w-5/6 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              </div>
+              <div className="h-12 w-full bg-slate-200 dark:bg-slate-700 rounded-xl mb-5"></div>
+              <div className="flex gap-2 mb-6 mt-auto">
+                <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded-md"></div>
+                <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-md"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-auto pt-5 border-t border-slate-100 dark:border-slate-800">
+                <div className="h-10 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                <div className="h-10 w-full bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : currentDevelopers.length > 0 ? (
         <>
@@ -279,12 +304,17 @@ export default function DevelopersPage() {
               <DeveloperCard
                 key={dev.id}
                 dev={dev}
-                onOpenProfile={() => navigate(`/profile/${dev.id}`)}
-                onConnect={() => handleConnectAction(dev)}
-                onMessage={() => navigate('/chat', { state: { startChatWith: dev.id } })}
                 connectLabel={getConnectUiState(dev.id).label}
                 connectDisabled={getConnectUiState(dev.id).disabled}
                 connectTone={getConnectUiState(dev.id).tone}
+                isConnected={connectionStatusById[dev.id] === 'connected'}
+                onConnect={
+                  getConnectUiState(dev.id).label === 'Cancel Request'
+                    ? handleCancelRequest
+                    : () => handleConnect(dev)
+                }
+                onMessage={() => navigate('/chat', { state: { startChatWith: dev.id } })}
+                onOpenProfile={() => navigate(`/profile/${dev.id}`)}
               />
             ))}
           </div>

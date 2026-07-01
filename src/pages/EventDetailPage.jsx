@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Calendar, MapPin, Users, Clock, Share2, Bookmark, ArrowLeft, CheckCircle2, Copy, MessageCircle, Twitter, Linkedin, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -28,8 +29,23 @@ export default function EventDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { data: reduxEvents } = useSelector((state) => state.events);
+  const reduxEvent = reduxEvents.find(e => e.id === id);
+
+  const [event, setEvent] = useState(() => {
+    if (reduxEvent) {
+      return {
+        ...reduxEvent,
+        maxSeats: reduxEvent.max_seats,
+        participation_mode: reduxEvent.participation_mode || 'solo',
+        max_team_members: reduxEvent.max_team_members || 1,
+        registrations: reduxEvent.registrations || 0,
+        organizer: reduxEvent.organizer?.name || 'Loading...'
+      };
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(!reduxEvent);
   const [registered, setRegistered] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -299,10 +315,69 @@ export default function EventDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-32 px-4">
-         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
+        <div className="w-24 h-4 bg-gray-200 dark:bg-slate-800 rounded mb-6"></div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="w-full h-64 bg-gray-200 dark:bg-slate-800 rounded-2xl mb-6"></div>
+
+            <div className="flex gap-2 mb-4">
+              <div className="w-16 h-6 bg-gray-200 dark:bg-slate-800 rounded-full"></div>
+              <div className="w-24 h-6 bg-gray-200 dark:bg-slate-800 rounded-full"></div>
+              <div className="w-20 h-6 bg-gray-200 dark:bg-slate-800 rounded-full"></div>
+            </div>
+
+            <div className="w-3/4 h-8 bg-gray-200 dark:bg-slate-800 rounded mb-3"></div>
+            <div className="w-1/3 h-4 bg-gray-200 dark:bg-slate-800 rounded mb-8"></div>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-start gap-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-4">
+                  <div className="w-4 h-4 bg-gray-200 dark:bg-slate-700 rounded mt-0.5"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="w-1/2 h-3 bg-gray-200 dark:bg-slate-700 rounded"></div>
+                    <div className="w-3/4 h-4 bg-gray-200 dark:bg-slate-700 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-1/4 h-6 bg-gray-200 dark:bg-slate-800 rounded mb-4"></div>
+            <div className="space-y-3 mb-6">
+              <div className="w-full h-4 bg-gray-200 dark:bg-slate-800 rounded"></div>
+              <div className="w-full h-4 bg-gray-200 dark:bg-slate-800 rounded"></div>
+              <div className="w-5/6 h-4 bg-gray-200 dark:bg-slate-800 rounded"></div>
+              <div className="w-4/6 h-4 bg-gray-200 dark:bg-slate-800 rounded"></div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="card p-6">
+              <div className="w-1/3 h-5 bg-gray-200 dark:bg-slate-800 rounded mb-6"></div>
+              
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <div className="w-1/3 h-3 bg-gray-200 dark:bg-slate-800 rounded"></div>
+                  <div className="w-1/4 h-3 bg-gray-200 dark:bg-slate-800 rounded"></div>
+                </div>
+                <div className="w-full h-2 bg-gray-200 dark:bg-slate-800 rounded-full"></div>
+                <div className="flex justify-end mt-2">
+                  <div className="w-1/4 h-3 bg-gray-200 dark:bg-slate-800 rounded"></div>
+                </div>
+              </div>
+
+              <div className="w-full h-11 bg-gray-200 dark:bg-slate-800 rounded-xl mb-3"></div>
+
+              <div className="flex gap-2">
+                <div className="flex-1 h-10 bg-gray-200 dark:bg-slate-800 rounded-lg"></div>
+                <div className="flex-1 h-10 bg-gray-200 dark:bg-slate-800 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   if (!event) {

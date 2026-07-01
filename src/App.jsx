@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Navbar from './components/Navbar';
@@ -8,21 +8,25 @@ import ScrollToTop from './components/ScrollToTop';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import EventsPage from './pages/EventsPage';
-import EventDetailPage from './pages/EventDetailPage';
-import DevelopersPage from './pages/DevelopersPage';
-import ConnectionsPage from './pages/ConnectionsPage';
-import ProfilePage from './pages/ProfilePage';
-import ProfileViewPage from './pages/ProfileViewPage';
-import ChatPage from './pages/ChatPage';
-import DashboardPage from './pages/DashboardPage';
-import CreateEventPage from './pages/CreateEventPage';
-import ClubsPage from './pages/ClubsPage';
-import ClubDetailPage from './pages/ClubDetailPage';
-import SystemAdminDashboard from './pages/SystemAdminDashboard';
-import AIAssistantPage from './pages/AIAssistantPage';
+
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const EventsPage = lazy(() => import('./pages/EventsPage'));
+const EventDetailPage = lazy(() => import('./pages/EventDetailPage'));
+const DevelopersPage = lazy(() => import('./pages/DevelopersPage'));
+const ConnectionsPage = lazy(() => import('./pages/ConnectionsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const ProfileViewPage = lazy(() => import('./pages/ProfileViewPage'));
+const ChatPage = lazy(() => import('./pages/ChatPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const CreateEventPage = lazy(() => import('./pages/CreateEventPage'));
+const ClubsPage = lazy(() => import('./pages/ClubsPage'));
+const ClubDetailPage = lazy(() => import('./pages/ClubDetailPage'));
+const SystemAdminLayout = lazy(() => import('./pages/admin/SystemAdminLayout'));
+const HubApprovals = lazy(() => import('./pages/admin/HubApprovals'));
+const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AIAssistantPage = lazy(() => import('./pages/AIAssistantPage'));
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -79,8 +83,9 @@ function AppContent() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Routes>
-        {/* Public Landing */}
+      <Suspense fallback={<div className="flex min-h-screen items-center justify-center p-4"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>}>
+        <Routes>
+          {/* Public Landing */}
         <Route
           path="/"
           element={
@@ -235,28 +240,23 @@ function AppContent() {
             </ParticipantRoute>
           }
         />
-        <Route
-          path="/clubs/:id"
-          element={
-            <ParticipantRoute user={user}>
-              <Layout user={user} onLogout={handleLogout}>
-                <ClubDetailPage />
-              </Layout>
-            </ParticipantRoute>
-          }
-        />
+        <Route path="/admin" element={<Navigate to="/admin/hubs" replace />} />
         <Route
           path="/admin"
           element={
             <PrivateRoute user={user}>
               <SystemAdminRoute user={user}>
                 <Layout user={user} onLogout={handleLogout}>
-                  <SystemAdminDashboard user={user} />
+                  <SystemAdminLayout />
                 </Layout>
               </SystemAdminRoute>
             </PrivateRoute>
           }
-        />
+        >
+          <Route path="hubs" element={<HubApprovals />} />
+          <Route path="events" element={<AdminEvents />} />
+          <Route path="users" element={<AdminUsers />} />
+        </Route>
 
         {/* 404 */}
         <Route
@@ -273,6 +273,7 @@ function AppContent() {
           }
         />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

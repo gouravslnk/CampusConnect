@@ -45,6 +45,7 @@ export default function EventCard({ event }) {
           <img
             src={event.image}
             alt={event.title}
+            loading="lazy"
             onError={() => setImageFailed(true)}
             className="h-full w-full object-cover"
           />

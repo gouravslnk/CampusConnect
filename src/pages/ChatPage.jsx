@@ -5,11 +5,22 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import EmojiPicker from 'emoji-picker-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchConnections } from '../store/slices/connectionsSlice';
+import { Users } from 'lucide-react';
 
 export default function ChatPage() {
   const { user, onlineUsers } = useAuth();
   const { showToast } = useToast();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { accepted: connectedFriends, hasFetched: connectionsFetched } = useSelector((state) => state.connections);
+
+  useEffect(() => {
+    if (user && !connectionsFetched) {
+      dispatch(fetchConnections(user.id));
+    }
+  }, [user, dispatch, connectionsFetched]);
   const navigate = useNavigate();
   const startChatWithId = location.state?.startChatWith;
   const startConversationId = location.state?.conversationId;
@@ -25,6 +36,9 @@ export default function ChatPage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
+  const [newChatTab, setNewChatTab] = useState('dm');
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
   const [globalUsers, setGlobalUsers] = useState([]);
@@ -37,31 +51,26 @@ export default function ChatPage() {
 
   // Global user search for new conversations
   useEffect(() => {
-    if (!showNewChatModal || !user) return;
+    if (!showNewChatModal || newChatTab !== 'dm') return;
     
-    const searchUsers = async () => {
+    const filterFriends = () => {
       setSearchingUsers(true);
-      
-      let query = supabase.from('profiles').select('id, name, avatar, department').neq('id', user.id).limit(10);
-      
-      if (globalSearch.trim()) {
-        query = query.ilike('name', `%${globalSearch.trim()}%`);
-      }
-      
-      const { data, error } = await query;
-      if (!error && data) {
-        setGlobalUsers(data);
+      if (!globalSearch.trim()) {
+        setGlobalUsers((connectedFriends || []).map(c => c.profile).filter(Boolean));
+      } else {
+        const term = globalSearch.toLowerCase().trim();
+        setGlobalUsers((connectedFriends || []).map(c => c.profile).filter(p => 
+          p && p.name && p.name.toLowerCase().includes(term)
+        ));
       }
       setSearchingUsers(false);
     };
     
-    // Debounce
     const timeoutId = setTimeout(() => {
-      searchUsers();
+      filterFriends();
     }, 300);
-    
     return () => clearTimeout(timeoutId);
-  }, [showNewChatModal, globalSearch, user]);
+  }, [globalSearch, showNewChatModal, newChatTab, connectedFriends]);
 
   // Close options dropdown on click outside
   useEffect(() => {
@@ -169,6 +178,70 @@ export default function ChatPage() {
     } catch (err) {
       console.error("Error deleting conversation:", err);
       showToast("Failed to delete the conversation.", { type: 'error' });
+    }
+  };
+
+  const startNewGroupChat = async () => {
+    if (!newGroupName.trim()) {
+      showToast("Please enter a group name", { type: 'warning' });
+      return;
+    }
+    if (selectedGroupMembers.length === 0) {
+      showToast("Please select at least one member", { type: 'warning' });
+      return;
+    }
+
+    try {
+      setSearchingUsers(true);
+      const { data: convData, error: convError } = await supabase
+        .from('conversations')
+        .insert([{ is_group: true, name: newGroupName.trim(), created_by: user.id }])
+        .select()
+        .single();
+
+      if (convError) throw convError;
+
+      const participants = [
+        { conversation_id: convData.id, profile_id: user.id, unread_count: 0 },
+        ...selectedGroupMembers.map(id => ({ conversation_id: convData.id, profile_id: id, unread_count: 0 }))
+      ];
+
+      const { error: partError } = await supabase
+        .from('conversation_participants')
+        .insert(participants);
+
+      if (partError) throw partError;
+
+      showToast("Group created successfully!", { type: 'success' });
+      setShowNewChatModal(false);
+      setNewGroupName('');
+      setSelectedGroupMembers([]);
+      setNewChatTab('dm');
+      await fetchConversations();
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to create group", { type: 'error' });
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    if (!activeConversationId) return;
+    try {
+      const { error } = await supabase
+        .from('conversation_participants')
+        .delete()
+        .eq('conversation_id', activeConversationId)
+        .eq('profile_id', user.id);
+      
+      if (error) throw error;
+      showToast("You left the group.", { type: 'info' });
+      setActiveConversationId(null);
+      await fetchConversations();
+    } catch(err) {
+      console.error(err);
+      showToast("Failed to leave group", { type: 'error' });
     }
   };
 

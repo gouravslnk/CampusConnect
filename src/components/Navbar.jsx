@@ -11,7 +11,9 @@ const navLinks = [
   { to: '/developers', label: 'Developers' },
   { to: '/connections', label: 'Connections' },
   { to: '/chat', label: 'Messages' },
-  { to: '/admin', label: 'System Admin', requiresSystemAdmin: true },
+  { to: '/admin/hubs', label: 'Hub Approvals', requiresSystemAdmin: true },
+  { to: '/admin/events', label: 'Admin Events', requiresSystemAdmin: true },
+  { to: '/admin/users', label: 'Admin Users', requiresSystemAdmin: true },
 ];
 
 export default function Navbar({ user, onLogout }) {
@@ -335,7 +337,7 @@ export default function Navbar({ user, onLogout }) {
                 <div className="relative" ref={notifRef}>
                   <button 
                     onClick={() => { setNotifOpen(!notifOpen); setDropOpen(false); }}
-                    className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="relative hidden md:flex rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     <Bell size={20} />
                     {unreadCount > 0 && (
@@ -344,7 +346,7 @@ export default function Navbar({ user, onLogout }) {
                   </button>
 
                   {notifOpen && (
-                    <div className="fixed left-4 right-4 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-full z-50 sm:mt-2 sm:w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                    <div className="fixed left-4 right-4 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-full z-50 sm:mt-2 sm:w-80 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                       <div className="flex items-center justify-between px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                         <span className="font-bold text-sm text-slate-900 dark:text-white">Notifications</span>
                         <div className="flex items-center gap-3">
@@ -462,6 +464,7 @@ export default function Navbar({ user, onLogout }) {
                       <img 
                         src={user.avatar} 
                         alt={user.name} 
+                        loading="lazy"
                         className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-700"
                       />
                     ) : (
@@ -476,7 +479,7 @@ export default function Navbar({ user, onLogout }) {
                   </button>
 
                   {dropOpen && (
-                    <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                       <Link
                         to="/profile"
                         onClick={() => setDropOpen(false)}
@@ -516,10 +519,13 @@ export default function Navbar({ user, onLogout }) {
             {/* Mobile hamburger */}
             {user && (
               <button
-                className="md:hidden rounded-xl p-2 text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:text-white dark:hover:text-white"
+                className="md:hidden relative rounded-xl p-2 text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:text-white dark:hover:text-white"
                 onClick={() => setMenuOpen(!menuOpen)}
               >
                 {menuOpen ? <X size={22} /> : <Menu size={22} />}
+                {unreadCount > 0 && !menuOpen && (
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                )}
               </button>
             )}
           </div>
@@ -552,6 +558,21 @@ export default function Navbar({ user, onLogout }) {
 
             <div className="mx-4 my-2 h-px bg-slate-100 dark:border-slate-800 dark:bg-slate-800"></div>
             
+            <div className="px-4 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Notifications
+              </span>
+              <button
+                onClick={() => { setNotifOpen(true); setMenuOpen(false); }}
+                className="relative rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-600 dark:text-slate-300 transition-colors hover:text-slate-900 dark:text-white dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                )}
+              </button>
+            </div>
+
             <div className="px-4 py-2 flex items-center justify-between">
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}

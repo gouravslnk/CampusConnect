@@ -53,15 +53,6 @@ function loadEmailJS() {
   return emailJsLoadPromise;
 }
 
-export async function initEmailJS() {
-  try {
-    await loadEmailJS();
-    return true;
-  } catch (error) {
-    console.error('Failed to initialize EmailJS:', error);
-    return false;
-  }
-}
 
 export async function sendEventReminder(
   userEmail,

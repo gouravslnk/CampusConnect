@@ -34,15 +34,17 @@ export default function EventsPage() {
   const [sort, setSort] = useState('Latest');
   
   const dispatch = useDispatch();
-  const { data: events, savedData: savedEvents, loading } = useSelector((state) => state.events);
+  const { data: events, savedData: savedEvents, loading, hasFetched } = useSelector((state) => state.events);
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
-    dispatch(fetchEvents());
-  }, [dispatch]);
+    if (!hasFetched) {
+      dispatch(fetchEvents());
+    }
+  }, [dispatch, hasFetched]);
 
   useEffect(() => {
     if (user) {
@@ -155,8 +157,23 @@ export default function EventsPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-20 px-4">
-           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="card overflow-hidden flex flex-col animate-pulse">
+              <div className="h-44 bg-gray-200 dark:bg-slate-700"></div>
+              <div className="p-4 flex flex-col flex-1">
+                <div className="h-3 w-1/3 bg-gray-200 dark:bg-slate-700 rounded mb-2"></div>
+                <div className="h-5 w-3/4 bg-gray-200 dark:bg-slate-700 rounded mb-4"></div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-3 w-2/3 bg-gray-200 dark:bg-slate-700 rounded"></div>
+                  <div className="h-3 w-1/2 bg-gray-200 dark:bg-slate-700 rounded"></div>
+                </div>
+                <div className="mt-auto pt-4">
+                  <div className="h-10 w-full bg-gray-200 dark:bg-slate-700 rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : currentEvents.length > 0 ? (
         <>

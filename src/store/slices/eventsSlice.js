@@ -7,7 +7,8 @@ export const fetchEvents = createAsyncThunk(
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*, event_registrations(count)');
+        .select('*, event_registrations(count)')
+        .limit(100);
 
       if (error) throw error;
 

@@ -340,12 +340,12 @@ export default function ProfilePage() {
                 'Remove users from CampusConnect',
                 'View operational counts and moderation queues',
               ].map((item) => (
-                <div key={item} className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <div key={item} className="rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200">
                   {item}
                 </div>
               ))}
             </div>
-            <div className="mt-6 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="mt-6 rounded-xl border border-amber-100 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
               System admins do not participate in events, team building, developer matching, or student connections.
             </div>
             <button onClick={() => navigate('/admin')} className="btn-primary mt-6 inline-flex items-center gap-2">
@@ -357,9 +357,9 @@ export default function ProfilePage() {
         {showSettingsModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
             <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl">
-              <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-6 py-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-6 py-4">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Edit Admin Profile</h3>
-                <button onClick={() => setShowSettingsModal(false)} className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-300">
+                <button onClick={() => setShowSettingsModal(false)} className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:text-slate-300">
                   <X size={20} />
                 </button>
               </div>
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Email</label>
-                  <input type="email" className="input-field bg-slate-50" value={profile.email || ''} disabled />
+                  <input type="email" className="input-field bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-70" value={profile.email || ''} disabled />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowSettingsModal(false)} className="btn-secondary flex-1 py-2.5">Cancel</button>

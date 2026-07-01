@@ -99,7 +99,7 @@ function intersection(source, target) {
   return source.filter((item) => targetSet.has(item));
 }
 
-export function scoreStudentForTeam(student, currentUser, requiredSkills) {
+function scoreStudentForTeam(student, currentUser, requiredSkills) {
   const candidateSkills = uniqueSkills(student.skills);
   const userSkills = uniqueSkills(currentUser?.skills || []);
   const required = uniqueSkills(requiredSkills);

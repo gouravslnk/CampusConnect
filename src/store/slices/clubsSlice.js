@@ -9,7 +9,8 @@ export const fetchClubs = createAsyncThunk(
         .from('clubs')
         .select(`id, name, college, description, created_at, profiles:owner_id (name)`)
         .eq('status', 'approved')
-        .order('name');
+        .order('name')
+        .limit(100);
 
       if (error) throw error;
       return data || [];

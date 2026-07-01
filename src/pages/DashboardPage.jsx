@@ -411,12 +411,14 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-end gap-3 h-40">
             {chartData.map((d) => (
-              <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+              <div key={d.month} className="flex-1 h-full flex flex-col items-center justify-end gap-1">
                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">{d.value}</span>
-                <div
-                  className="w-full bg-blue-600 rounded-t-md hover:bg-blue-700 transition-colors cursor-pointer"
-                  style={{ height: `${(d.value / maxVal) * 100}%`, minHeight: '8px' }}
-                />
+                <div className="w-full flex-1 flex items-end">
+                  <div
+                    className="w-full bg-blue-600 rounded-t-md hover:bg-blue-700 transition-colors cursor-pointer"
+                    style={{ height: `${(d.value / maxVal) * 100}%`, minHeight: '8px' }}
+                  />
+                </div>
                 <span className="text-xs text-gray-400">{d.month}</span>
               </div>
             ))}

@@ -7,7 +7,8 @@ export const fetchDevelopers = createAsyncThunk(
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, projects(id)');
+        .select('*, projects(id)')
+        .limit(100);
 
       if (error) throw error;
       

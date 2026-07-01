@@ -7,7 +7,8 @@ export default function DeveloperCard({
   onMessage,
   connectLabel = 'Connect',
   connectDisabled = false,
-  connectTone = 'primary'
+  connectTone = 'primary',
+  isConnected = false
 }) {
   const initials = dev.name
     .split(' ')
@@ -76,6 +77,7 @@ export default function DeveloperCard({
           <img
             src={avatarUrl}
             alt={dev.name}
+            loading="lazy"
             className="w-14 h-14 rounded-full object-cover ring-2 ring-slate-100 dark:ring-slate-800 flex-shrink-0"
           />
         ) : (
@@ -126,26 +128,29 @@ export default function DeveloperCard({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mt-auto pt-5 border-t border-slate-100 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={stopAndCall(onConnect)}
-          disabled={connectDisabled}
-          className={`text-sm flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold transition-colors ${
-            connectDisabled
-              ? 'cursor-not-allowed border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-              : connectToneClass
-          }`}
-        >
-          <User size={16} /> {connectLabel}
-        </button>
-        <button
-          type="button"
-          onClick={stopAndCall(onMessage)}
-          className="border-2 border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-500 transition-colors flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-transparent"
-        >
-          <MessageSquare size={16} /> Message
-        </button>
+      <div className="grid gap-3 mt-auto pt-5 border-t border-slate-100 dark:border-slate-800 grid-cols-1">
+        {!isConnected ? (
+          <button
+            type="button"
+            onClick={stopAndCall(onConnect)}
+            disabled={connectDisabled}
+            className={`text-sm flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold transition-colors ${
+              connectDisabled
+                ? 'cursor-not-allowed border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                : connectToneClass
+            }`}
+          >
+            <User size={16} /> {connectLabel}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={stopAndCall(onMessage)}
+            className="border-2 border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-500 transition-colors flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-transparent"
+          >
+            <MessageSquare size={16} /> Message
+          </button>
+        )}
       </div>
     </div>
   );
